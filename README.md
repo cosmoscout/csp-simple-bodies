@@ -11,7 +11,7 @@ This plugin can be enabled with the following configuration in your `settings.js
   ...
   "plugins": {
     ...
-    "csp-simple-planets": {
+    "csp-simple-bodies": {
       "planets": {
         <anchor name>: {
           "texture": <path to surface texture>
