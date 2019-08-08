@@ -4,8 +4,8 @@
 //                        Copyright: (c) 2019 German Aerospace Center (DLR)                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CSP_SIMPLE_PLANETS_SIMPLE_PLANET_HPP
-#define CSP_SIMPLE_PLANETS_SIMPLE_PLANET_HPP
+#ifndef CSP_SIMPLE_BODIES_SIMPLE_PLANET_HPP
+#define CSP_SIMPLE_BODIES_SIMPLE_PLANET_HPP
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 #include <VistaOGLExt/VistaBufferObject.h>
@@ -15,14 +15,14 @@
 
 #include "../../../src/cs-scene/CelestialBody.hpp"
 
-namespace csp::simpleplanets {
+namespace csp::simplebodies {
 
 /// This is just a sphere with a texture...
-class SimplePlanet : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
+class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
-  SimplePlanet(std::string const& sTexture, std::string const& sCenterName,
+  SimpleBody(std::string const& sTexture, std::string const& sCenterName,
       std::string const& sFrameName, double tStartExistence, double tEndExistence);
-  ~SimplePlanet() override = default;
+  ~SimpleBody() override = default;
 
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
 
@@ -49,5 +49,7 @@ class SimplePlanet : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   static const std::string SPHERE_VERT;
   static const std::string SPHERE_FRAG;
 };
-} // namespace csp::simpleplanets
-#endif // CSP_SIMPLE_PLANETS_SIMPLE_PLANET_HPP
+
+} // namespace csp::simplebodies
+
+#endif // CSP_SIMPLE_BODIES_SIMPLE_PLANET_HPP

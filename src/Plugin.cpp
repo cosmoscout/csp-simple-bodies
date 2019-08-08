@@ -16,7 +16,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EXPORT_FN cs::core::PluginBase* create() {
-  return new csp::simpleplanets::Plugin;
+  return new csp::simplebodies::Plugin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,60 +27,60 @@ EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace csp::simpleplanets {
+namespace csp::simplebodies {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Planet& o) {
+void from_json(const nlohmann::json& j, Plugin::Settings::Body& o) {
   o.mTexture = j.at("texture").get<std::string>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  o.mPlanets = j.at("planets").get<std::map<std::string, Plugin::Settings::Planet>>();
+  o.mBodies = j.at("bodies").get<std::map<std::string, Plugin::Settings::Body>>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::init() {
-  std::cout << "Loading: CosmoScout VR Plugin Simple Planets" << std::endl;
+  std::cout << "Loading: CosmoScout VR Plugin Simple Bodies" << std::endl;
 
-  mPluginSettings = mAllSettings->mPlugins.at("csp-simple-planets");
+  mPluginSettings = mAllSettings->mPlugins.at("csp-simple-bodies");
 
-  for (auto const& planetSettings : mPluginSettings.mPlanets) {
-    auto anchor = mAllSettings->mAnchors.find(planetSettings.first);
+  for (auto const& bodySettings : mPluginSettings.mBodies) {
+    auto anchor = mAllSettings->mAnchors.find(bodySettings.first);
 
     if (anchor == mAllSettings->mAnchors.end()) {
       throw std::runtime_error(
-          "There is no Anchor \"" + planetSettings.first + "\" defined in the settings.");
+          "There is no Anchor \"" + bodySettings.first + "\" defined in the settings.");
     }
 
     double tStartExistence = cs::utils::convert::toSpiceTime(anchor->second.mStartExistence);
     double tEndExistence   = cs::utils::convert::toSpiceTime(anchor->second.mEndExistence);
 
-    auto planet = std::make_shared<SimplePlanet>(planetSettings.second.mTexture,
-        anchor->second.mCenter, anchor->second.mFrame, tStartExistence, tEndExistence);
-    mSolarSystem->registerBody(planet);
+    auto body = std::make_shared<SimpleBody>(bodySettings.second.mTexture, anchor->second.mCenter,
+        anchor->second.mFrame, tStartExistence, tEndExistence);
+    mSolarSystem->registerBody(body);
 
-    planet->setSun(mSolarSystem->getSun());
-    mSimplePlanetNodes.push_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), planet.get()));
-    mSimplePlanets.push_back(planet);
+    body->setSun(mSolarSystem->getSun());
+    mSimpleBodyNodes.push_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), body.get()));
+    mSimpleBodies.push_back(body);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
-  for (auto const& simplePlanet : mSimplePlanets) {
-    mSolarSystem->unregisterBody(simplePlanet);
+  for (auto const& simpleBody : mSimpleBodies) {
+    mSolarSystem->unregisterBody(simpleBody);
   }
 
-  for (auto const& simplePlanetNode : mSimplePlanetNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(simplePlanetNode);
+  for (auto const& simpleBodyNode : mSimpleBodyNodes) {
+    mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace csp::simpleplanets
+} // namespace csp::simplebodies

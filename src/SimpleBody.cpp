@@ -4,7 +4,7 @@
 //                        Copyright: (c) 2019 German Aerospace Center (DLR)                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SimplePlanet.hpp"
+#include "SimpleBody.hpp"
 
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
@@ -16,7 +16,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace csp::simpleplanets {
+namespace csp::simplebodies {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,7 @@ const unsigned GRID_RESOLUTION_Y = 100;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string SimplePlanet::SPHERE_VERT = R"(
+const std::string SimpleBody::SPHERE_VERT = R"(
 #version 440 compatibility
 
 uniform vec3 uSunDirection;
@@ -64,7 +64,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string SimplePlanet::SPHERE_FRAG = R"(
+const std::string SimpleBody::SPHERE_FRAG = R"(
 #version 440 compatibility
 
 uniform sampler2D uSurfaceTexture;
@@ -95,7 +95,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-SimplePlanet::SimplePlanet(std::string const& sTexture, std::string const& sCenterName,
+SimpleBody::SimpleBody(std::string const& sTexture, std::string const& sCenterName,
     std::string const& sFrameName, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialBody(sCenterName, sFrameName, tStartExistence, tEndExistence)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
@@ -149,32 +149,32 @@ SimplePlanet::SimplePlanet(std::string const& sTexture, std::string const& sCent
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SimplePlanet::setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun) {
+void SimpleBody::setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun) {
   mSun = sun;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SimplePlanet::getIntersection(
+bool SimpleBody::getIntersection(
     glm::dvec3 const& rayPos, glm::dvec3 const& rayDir, glm::dvec3& pos) const {
   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-double SimplePlanet::getHeight(glm::dvec2 lngLat) const {
+double SimpleBody::getHeight(glm::dvec2 lngLat) const {
   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-glm::dvec3 SimplePlanet::getRadii() const {
+glm::dvec3 SimpleBody::getRadii() const {
   return mRadii;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SimplePlanet::Do() {
+bool SimpleBody::Do() {
   if (!getIsInExistence() || !pVisible.get()) {
     return true;
   }
@@ -230,10 +230,10 @@ bool SimplePlanet::Do() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SimplePlanet::GetBoundingBox(VistaBoundingBox& bb) {
+bool SimpleBody::GetBoundingBox(VistaBoundingBox& bb) {
   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace csp::simpleplanets
+} // namespace csp::simplebodies

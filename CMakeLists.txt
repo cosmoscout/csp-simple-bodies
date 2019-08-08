@@ -8,18 +8,16 @@
 
 file(GLOB SOURCE_FILES src/*.cpp)
 
-add_library(csp-simple-planets SHARED
+add_library(csp-simple-bodies SHARED
   ${SOURCE_FILES}
 )
 
-target_link_libraries(csp-simple-planets
+target_link_libraries(csp-simple-bodies
   PUBLIC
     cs-core
-    cs-scene
-    cs-graphics
 )
 
 # install plugin -----------------------------------------------------------------------------------
 
-install(TARGETS   csp-simple-planets DESTINATION "share/plugins")
-install(DIRECTORY "textures"         DESTINATION "share/resources")
+install(TARGETS   csp-simple-bodies DESTINATION "share/plugins")
+install(DIRECTORY "textures"        DESTINATION "share/resources")
