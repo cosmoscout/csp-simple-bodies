@@ -12,11 +12,11 @@ This plugin can be enabled with the following configuration in your `settings.js
   "plugins": {
     ...
     "csp-simple-bodies": {
-      "planets": {
+      "bodies": {
         <anchor name>: {
           "texture": <path to surface texture>
         },
-        ... <more planets/moons> ...
+        ... <more bodies> ...
       }
     }
   }
