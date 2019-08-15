@@ -6,6 +6,7 @@
 
 #include "SimpleBody.hpp"
 
+#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
 #include "../../../src/cs-utils/FrameTimings.hpp"
@@ -26,8 +27,6 @@ const unsigned GRID_RESOLUTION_Y = 100;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string SimpleBody::SPHERE_VERT = R"(
-#version 440 compatibility
-
 uniform vec3 uSunDirection;
 uniform vec3 uRadii;
 uniform mat4 uMatModelView;
@@ -65,10 +64,9 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string SimpleBody::SPHERE_FRAG = R"(
-#version 440 compatibility
-
 uniform sampler2D uSurfaceTexture;
 uniform float uAmbientBrightness;
+uniform float uSunIlluminance;
 uniform float uFarClip;
 
 // inputs
@@ -81,13 +79,27 @@ in vec2 vLonLat;
 // outputs
 layout(location = 0) out vec3 oColor;
 
+vec3 SRGBtoLINEAR(vec3 srgbIn)
+{
+  vec3 bLess = step(vec3(0.04045),srgbIn);
+  return mix( srgbIn/vec3(12.92), pow((srgbIn+vec3(0.055))/vec3(1.055),vec3(2.4)), bLess );
+}
+
 void main()
 {
-    vec3 normal = normalize(vPosition - vCenter);
-    float light = max(dot(normal, normalize(vSunDirection)), 0.0);
-
     oColor = texture(uSurfaceTexture, vTexCoords).rgb;
-    oColor = mix(oColor*uAmbientBrightness, oColor, light);
+
+    #ifdef ENABLE_HDR
+      oColor = SRGBtoLINEAR(oColor);
+    #endif
+
+    oColor = oColor * uSunIlluminance;
+
+    #ifdef ENABLE_LIGHTING
+      vec3 normal = normalize(vPosition - vCenter);
+      float light = max(dot(normal, normalize(vSunDirection)), 0.0);
+      oColor = mix(oColor*uAmbientBrightness, oColor, light);
+    #endif
 
     gl_FragDepth = length(vPosition) / uFarClip;
 }
@@ -95,9 +107,13 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-SimpleBody::SimpleBody(std::string const& sTexture, std::string const& sCenterName,
-    std::string const& sFrameName, double tStartExistence, double tEndExistence)
+SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+    std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+    std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
+    double tEndExistence)
     : cs::scene::CelestialBody(sCenterName, sFrameName, tStartExistence, tEndExistence)
+    , mGraphicsEngine(graphicsEngine)
+    , mSolarSystem(solarSystem)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mRadii(cs::core::SolarSystem::getRadii(sCenterName)) {
   pVisibleRadius = mRadii[0];
@@ -141,10 +157,8 @@ SimpleBody::SimpleBody(std::string const& sTexture, std::string const& sCenterNa
   mSphereIBO.Release();
   mSphereVBO.Release();
 
-  // create sphere shader
-  mShader.InitVertexShaderFromString(SPHERE_VERT);
-  mShader.InitFragmentShaderFromString(SPHERE_FRAG);
-  mShader.Link();
+  mGraphicsEngine->pEnableLighting.onChange().connect([this](bool) { mShaderDirty = true; });
+  mGraphicsEngine->pEnableHDR.onChange().connect([this](bool) { mShaderDirty = true; });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,21 +195,56 @@ bool SimpleBody::Do() {
 
   cs::utils::FrameTimings::ScopedTimer timer("Simple Planets");
 
-  // set uniforms
-  mShader.Bind();
+  if (mShaderDirty) {
+    delete mShader;
+    mShader = new VistaGLSLShader();
 
-  if (getCenterName() != "Sun") {
-    auto sunTransform    = mSun->getWorldTransform();
-    auto planetTransform = getWorldTransform();
+    // create sphere shader
+    std::string defines = "#version 430 compatibility\n";
 
-    auto sunDirection = sunTransform[3] - planetTransform[3];
+    if (mGraphicsEngine->pEnableHDR.get()) {
+      defines += "#define ENABLE_HDR\n";
+    }
 
-    mShader.SetUniform(mShader.GetUniformLocation("uSunDirection"), sunDirection[0],
-        sunDirection[1], sunDirection[2]);
-    mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 0.2f);
-  } else {
-    mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 1.f);
+    if (mGraphicsEngine->pEnableLighting.get()) {
+      defines += "#define ENABLE_LIGHTING\n";
+    }
+
+    mShader->InitVertexShaderFromString(defines + SPHERE_VERT);
+    mShader->InitFragmentShaderFromString(defines + SPHERE_FRAG);
+    mShader->Link();
+
+    mShaderDirty = false;
   }
+
+  // set uniforms
+  mShader->Bind();
+
+  glm::vec3 sunDirection(1, 0, 0);
+  float     sunIlluminance(1.f);
+  float     ambientBrightness(mGraphicsEngine->pAmbientBrightness.get());
+
+  if (getCenterName() == "Sun") {
+    if (mGraphicsEngine->pEnableHDR.get()) {
+      sunIlluminance = mSolarSystem->pSunLuminousPower.get();
+    }
+
+    ambientBrightness = 1.0f;
+
+  } else if (mSun) {
+    sunDirection = mSolarSystem->pSunPosition.get() - glm::dvec3(getWorldTransform()[3]);
+
+    if (mGraphicsEngine->pEnableHDR.get()) {
+      double sunDist = glm::length(sunDirection);
+      sunIlluminance =
+          mSolarSystem->pSunLuminousPower.get() / (sunDist * sunDist * 4.0 * glm::pi<double>());
+    }
+  }
+
+  mShader->SetUniform(mShader->GetUniformLocation("uSunDirection"), sunDirection[0],
+      sunDirection[1], sunDirection[2]);
+  mShader->SetUniform(mShader->GetUniformLocation("uSunIlluminance"), sunIlluminance);
+  mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), ambientBrightness);
 
   // get modelview and projection matrices
   GLfloat glMatMV[16], glMatP[16];
@@ -203,14 +252,14 @@ bool SimpleBody::Do() {
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
   auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(getWorldTransform());
   glUniformMatrix4fv(
-      mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+      mShader->GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
+  glUniformMatrix4fv(mShader->GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
 
-  mShader.SetUniform(mShader.GetUniformLocation("uSurfaceTexture"), 0);
-  mShader.SetUniform(
-      mShader.GetUniformLocation("uRadii"), (float)mRadii[0], (float)mRadii[0], (float)mRadii[0]);
-  mShader.SetUniform(
-      mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+  mShader->SetUniform(mShader->GetUniformLocation("uSurfaceTexture"), 0);
+  mShader->SetUniform(
+      mShader->GetUniformLocation("uRadii"), (float)mRadii[0], (float)mRadii[0], (float)mRadii[0]);
+  mShader->SetUniform(
+      mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
   mTexture->Bind(GL_TEXTURE0);
 
@@ -223,7 +272,7 @@ bool SimpleBody::Do() {
   // clean up
   mTexture->Unbind(GL_TEXTURE0);
 
-  mShader.Release();
+  mShader->Release();
 
   return true;
 }

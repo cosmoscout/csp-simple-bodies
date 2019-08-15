@@ -15,13 +15,20 @@
 
 #include "../../../src/cs-scene/CelestialBody.hpp"
 
+namespace cs::core {
+class GraphicsEngine;
+class SolarSystem;
+} // namespace cs::core
+
 namespace csp::simplebodies {
 
 /// This is just a sphere with a texture...
 class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
-  SimpleBody(std::string const& sTexture, std::string const& sCenterName,
-      std::string const& sFrameName, double tStartExistence, double tEndExistence);
+  SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+      std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+      std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
+      double tEndExistence);
   ~SimpleBody() override = default;
 
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
@@ -35,9 +42,11 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   bool GetBoundingBox(VistaBoundingBox& bb) override;
 
  private:
-  std::shared_ptr<VistaTexture> mTexture;
+  std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
+  std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
+  std::shared_ptr<VistaTexture>             mTexture;
 
-  VistaGLSLShader        mShader;
+  VistaGLSLShader*       mShader = nullptr;
   VistaVertexArrayObject mSphereVAO;
   VistaBufferObject      mSphereVBO;
   VistaBufferObject      mSphereIBO;
@@ -45,6 +54,8 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
 
   glm::dvec3 mRadii;
+
+  bool mShaderDirty = true;
 
   static const std::string SPHERE_VERT;
   static const std::string SPHERE_FRAG;
