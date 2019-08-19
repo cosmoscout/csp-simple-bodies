@@ -226,7 +226,9 @@ bool SimpleBody::Do() {
 
   if (getCenterName() == "Sun") {
     if (mGraphicsEngine->pEnableHDR.get()) {
-      sunIlluminance = mSolarSystem->pSunLuminousPower.get();
+      double sceneScale = 1.0 / mSolarSystem->getObserver().getAnchorScale();
+      sunIlluminance    = mSolarSystem->pSunLuminousPower.get() /
+                       (sceneScale * sceneScale * mRadii[0] * mRadii[0] * 4.0 * glm::pi<double>());
     }
 
     ambientBrightness = 1.0f;
