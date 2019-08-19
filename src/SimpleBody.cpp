@@ -58,6 +58,13 @@ void main()
     vPosition   = (uMatModelView * vec4(vPosition, 1.0)).xyz;
     vCenter     = (uMatModelView * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
     gl_Position =  uMatProjection * vec4(vPosition, 1);
+
+    if (gl_Position.w > 0) {
+      gl_Position /= gl_Position.w;
+      if (gl_Position.z >= 1) {
+        gl_Position.z = 0.999999;
+      }
+    }
 }
 )";
 
