@@ -156,8 +156,30 @@ void SimpleBody::setSun(std::shared_ptr<const cs::scene::CelestialObject> const&
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool SimpleBody::getIntersection(
-    glm::dvec3 const& rayPos, glm::dvec3 const& rayDir, glm::dvec3& pos) const {
-  return false;
+    glm::dvec3 const& rayOrigin, glm::dvec3 const& rayDir, glm::dvec3& pos) const {
+
+  glm::dmat4 transform = glm::inverse(getWorldTransform());
+
+  // Transform ray into planet coordinate system
+  glm::dvec4 origin(rayOrigin, 1.0);
+  origin = transform * origin;
+
+  glm::dvec4 direction(rayDir, 0.0);
+  direction = transform * direction;
+  direction = glm::normalize(direction);
+
+  double b    = glm::dot(origin, direction);
+  double c    = glm::dot(origin, origin) - mRadii[0] * mRadii[0];
+  double fDet = b * b - c;
+
+  if (fDet < 0.0) {
+    return false;
+  }
+
+  fDet = std::sqrt(fDet);
+  pos  = (origin + direction * (-b - fDet));
+
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -6,6 +6,7 @@
 
 #include "Plugin.hpp"
 
+#include "../../../src/cs-core/InputManager.hpp"
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-utils/convert.hpp"
@@ -62,6 +63,7 @@ void Plugin::init() {
     auto body = std::make_shared<SimpleBody>(bodySettings.second.mTexture, anchor->second.mCenter,
         anchor->second.mFrame, tStartExistence, tEndExistence);
     mSolarSystem->registerBody(body);
+    mInputManager->registerSelectable(body);
 
     body->setSun(mSolarSystem->getSun());
     mSimpleBodyNodes.push_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), body.get()));
@@ -74,6 +76,7 @@ void Plugin::init() {
 void Plugin::deInit() {
   for (auto const& simpleBody : mSimpleBodies) {
     mSolarSystem->unregisterBody(simpleBody);
+    mInputManager->unregisterSelectable(simpleBody);
   }
 
   for (auto const& simpleBodyNode : mSimpleBodyNodes) {
