@@ -39,9 +39,8 @@ void from_json(const nlohmann::json& j, Plugin::Settings::Body& o) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSettingsSection("csp-simple-bodies.bodies", [&] {
-    o.mBodies = j.at("bodies").get<std::map<std::string, Plugin::Settings::Body>>();
-  });
+  cs::core::parseSection("csp-simple-bodies",
+      [&] { o.mBodies = cs::core::parseMap<std::string, Plugin::Settings::Body>("bodies", j); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
