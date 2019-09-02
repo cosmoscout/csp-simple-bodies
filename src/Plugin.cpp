@@ -33,13 +33,15 @@ namespace csp::simplebodies {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings::Body& o) {
-  o.mTexture = j.at("texture").get<std::string>();
+  o.mTexture = cs::core::parseProperty<std::string>("texture", j);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  o.mBodies = j.at("bodies").get<std::map<std::string, Plugin::Settings::Body>>();
+  cs::core::parseSettingsSection("csp-simple-bodies.bodies", [&] {
+    o.mBodies = j.at("bodies").get<std::map<std::string, Plugin::Settings::Body>>();
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
