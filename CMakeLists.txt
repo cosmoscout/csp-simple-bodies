@@ -21,3 +21,4 @@ target_link_libraries(csp-simple-bodies
 
 install(TARGETS   csp-simple-bodies DESTINATION "share/plugins")
 install(DIRECTORY "textures"        DESTINATION "share/resources")
+install(DIRECTORY "shaders"         DESTINATION "share/resources")

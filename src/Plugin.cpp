@@ -65,10 +65,13 @@ void Plugin::init() {
     mSolarSystem->registerBody(body);
     mInputManager->registerSelectable(body);
 
-    body->setSun(mSolarSystem->getSun());
-    mSimpleBodyNodes.push_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), body.get()));
     mSimpleBodies.push_back(body);
   }
+
+  mBodyRenderer = SimpleBodyRenderer();
+  mBodyRenderer.setBodies(mSimpleBodies);
+  mBodyRenderer.setSun(mSolarSystem->getSun());
+  mRendererNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), &mBodyRenderer);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,9 +82,7 @@ void Plugin::deInit() {
     mInputManager->unregisterSelectable(simpleBody);
   }
 
-  for (auto const& simpleBodyNode : mSimpleBodyNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode);
-  }
+  mSceneGraph->GetRoot()->DisconnectChild(mRendererNode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

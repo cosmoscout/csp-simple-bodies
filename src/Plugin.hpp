@@ -9,6 +9,7 @@
 
 #include "../../../src/cs-core/PluginBase.hpp"
 #include "SimpleBody.hpp"
+#include "SimpleBodyRenderer.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 
@@ -33,7 +34,8 @@ class Plugin : public cs::core::PluginBase {
  private:
   Settings                                 mPluginSettings;
   std::vector<std::shared_ptr<SimpleBody>> mSimpleBodies;
-  std::vector<VistaOpenGLNode*>            mSimpleBodyNodes;
+  VistaOpenGLNode*                         mRendererNode;
+  SimpleBodyRenderer                       mBodyRenderer;
 };
 
 } // namespace csp::simplebodies
