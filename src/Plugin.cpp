@@ -58,10 +58,9 @@ void Plugin::init() {
           "There is no Anchor \"" + bodySettings.first + "\" defined in the settings.");
     }
 
-
-    auto existence = cs::utils::convert::getExistenceFromSettings(*anchor);
+    auto   existence       = cs::utils::convert::getExistenceFromSettings(*anchor);
     double tStartExistence = existence.first;
-    double tEndExistence = existence.second;
+    double tEndExistence   = existence.second;
 
     auto body = std::make_shared<SimpleBody>(bodySettings.second.mTexture, anchor->second.mCenter,
         anchor->second.mFrame, tStartExistence, tEndExistence);
