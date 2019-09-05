@@ -26,9 +26,8 @@ const unsigned GRID_RESOLUTION_Y = 100;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string SimpleBody::SPHERE_VERT = R"(
-#version 440 compatibility
+#version 330
 
-uniform vec3 uSunDirection;
 uniform vec3 uRadii;
 uniform mat4 uMatModelView;
 uniform mat4 uMatProjection;
@@ -38,7 +37,6 @@ layout(location = 0) in vec2 iGridPos;
 
 // outputs
 out vec2 vTexCoords;
-out vec3 vSunDirection;
 out vec3 vPosition;
 out vec3 vCenter;
 out vec2 vLonLat;
@@ -48,7 +46,6 @@ const float PI = 3.141592654;
 void main()
 {
     vTexCoords = vec2(iGridPos.x, 1-iGridPos.y);
-    vSunDirection = gl_NormalMatrix * uSunDirection;
     vLonLat.x = iGridPos.x * 2.0 * PI;
     vLonLat.y = (iGridPos.y-0.5) * PI;
     vPosition = uRadii * vec3(
@@ -65,8 +62,9 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string SimpleBody::SPHERE_FRAG = R"(
-#version 440 compatibility
+#version 330
 
+uniform vec3 uSunDirection;
 uniform sampler2D uSurfaceTexture;
 uniform float uAmbientBrightness;
 uniform float uFarClip;
@@ -84,7 +82,7 @@ layout(location = 0) out vec3 oColor;
 void main()
 {
     vec3 normal = normalize(vPosition - vCenter);
-    float light = max(dot(normal, normalize(vSunDirection)), 0.0);
+    float light = max(dot(normal, uSunDirection), 0.0);
 
     oColor = texture(uSurfaceTexture, vTexCoords).rgb;
     oColor = mix(oColor*uAmbientBrightness, oColor, light);
@@ -206,19 +204,6 @@ bool SimpleBody::Do() {
   // set uniforms
   mShader.Bind();
 
-  if (getCenterName() != "Sun") {
-    auto sunTransform    = mSun->getWorldTransform();
-    auto planetTransform = getWorldTransform();
-
-    auto sunDirection = sunTransform[3] - planetTransform[3];
-
-    mShader.SetUniform(mShader.GetUniformLocation("uSunDirection"), sunDirection[0],
-        sunDirection[1], sunDirection[2]);
-    mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 0.2f);
-  } else {
-    mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 1.f);
-  }
-
   // get modelview and projection matrices
   GLfloat glMatMV[16], glMatP[16];
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
@@ -233,6 +218,20 @@ bool SimpleBody::Do() {
       mShader.GetUniformLocation("uRadii"), (float)mRadii[0], (float)mRadii[0], (float)mRadii[0]);
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+
+  if (getCenterName() != "Sun") {
+    auto sunTransform    = glm::make_mat4x4(glMatMV) * glm::mat4(mSun->getWorldTransform());
+    auto planetTransform = matMV;
+
+    auto sunDirection = glm::vec3(sunTransform[3]) - glm::vec3(planetTransform[3]);
+    sunDirection      = glm::normalize(sunDirection);
+
+    mShader.SetUniform(mShader.GetUniformLocation("uSunDirection"), sunDirection[0],
+        sunDirection[1], sunDirection[2]);
+    mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 0.2f);
+  } else {
+    mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 1.f);
+  }
 
   mTexture->Bind(GL_TEXTURE0);
 
