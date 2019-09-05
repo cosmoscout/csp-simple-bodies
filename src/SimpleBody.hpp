@@ -34,7 +34,7 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
 
   bool getIntersection(
-      glm::dvec3 const& rayPos, glm::dvec3 const& rayDir, glm::dvec3& pos) const override;
+      glm::dvec3 const& rayOrigin, glm::dvec3 const& rayDir, glm::dvec3& pos) const override;
   double     getHeight(glm::dvec2 lngLat) const override;
   glm::dvec3 getRadii() const override;
 
