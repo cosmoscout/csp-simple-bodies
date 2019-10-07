@@ -60,6 +60,14 @@ SimpleBodyRenderer::SimpleBodyRenderer() {
   mShader.InitFragmentShaderFromString(
       cs::utils::loadFileContentsToString("../share/resources/shaders/SimpleBody.frag.glsl"));
   mShader.Link();
+
+  mUniforms.matProjection     = mShader.GetUniformLocation("uMatProjection");
+  mUniforms.surfaceTexture    = mShader.GetUniformLocation("uSurfaceTexture");
+  mUniforms.farClip           = mShader.GetUniformLocation("uFarClip");
+  mUniforms.sunDirection      = mShader.GetUniformLocation("uSunDirection");
+  mUniforms.ambientBrightness = mShader.GetUniformLocation("uAmbientBrightness");
+  mUniforms.matModelView      = mShader.GetUniformLocation("uMatModelView");
+  mUniforms.radii             = mShader.GetUniformLocation("uRadii");
 }
 
 void SimpleBodyRenderer::setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun) {
@@ -68,12 +76,9 @@ void SimpleBodyRenderer::setSun(std::shared_ptr<const cs::scene::CelestialObject
 
 bool SimpleBodyRenderer::Do() {
   cs::utils::FrameTimings::ScopedTimer timer("Simple Planets");
-  std::cerr << "A?" << std::endl;
 
   mShader.Bind();
   mSphereVAO.Bind();
-
-  std::cerr << "B?" << std::endl;
 
   GLfloat glMatMV[16];
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
@@ -81,54 +86,36 @@ bool SimpleBodyRenderer::Do() {
   GLfloat glMatP[16];
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
 
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
-  mShader.SetUniform(mShader.GetUniformLocation("uSurfaceTexture"), 0);
-  mShader.SetUniform(
-      mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+  glUniformMatrix4fv(mUniforms.matProjection, 1, GL_FALSE, glMatP);
+  mShader.SetUniform(mUniforms.surfaceTexture, 0);
+  mShader.SetUniform(mUniforms.farClip, cs::utils::getCurrentFarClipDistance());
 
-  std::cerr << "C?" << std::endl;
   for (const auto& body : mBodies) {
     if (body->getCenterName() != "Sun") {
-      std::cerr << "D?" << std::endl;
       auto sunTransform    = mSun->getWorldTransform();
       auto planetTransform = body->getWorldTransform();
 
-      std::cerr << "E?" << std::endl;
       auto sunDirection = sunTransform[3] - planetTransform[3];
 
-      std::cerr << "F?" << std::endl;
-      mShader.SetUniform(mShader.GetUniformLocation("uSunDirection"), sunDirection[0],
-          sunDirection[1], sunDirection[2]);
-      std::cerr << "G?" << std::endl;
-      mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 0.2f);
+      mShader.SetUniform(mUniforms.sunDirection, sunDirection[0], sunDirection[1], sunDirection[2]);
+      mShader.SetUniform(mUniforms.ambientBrightness, 0.2f);
     } else {
-      mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), 1.f);
+      mShader.SetUniform(mUniforms.ambientBrightness, 1.f);
     }
 
-    std::cerr << "H?" << std::endl;
     // get modelview and projection matrices
     auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(body->getWorldTransform());
-    glUniformMatrix4fv(
-        mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
+    glUniformMatrix4fv(mUniforms.matModelView, 1, GL_FALSE, glm::value_ptr(matMV));
 
-    std::cerr << "I?" << std::endl;
-    mShader.SetUniform(mShader.GetUniformLocation("uRadii"), (float)body->getRadii()[0],
-        (float)body->getRadii()[0], (float)body->getRadii()[0]);
+    mShader.SetUniform(mUniforms.radii, (float)body->getRadii()[0], (float)body->getRadii()[0],
+        (float)body->getRadii()[0]);
 
-    std::cerr << "J?" << std::endl;
     body->getTexture()->Bind(GL_TEXTURE0);
 
-    auto error = glGetError();
-    std::cerr << glewGetErrorString(error) << std::endl;
-
-    std::cerr << "K?" << std::endl;
     glDrawElements(GL_TRIANGLE_STRIP, (GRID_RESOLUTION_X - 1) * (2 + 2 * GRID_RESOLUTION_Y),
         GL_UNSIGNED_INT, nullptr);
 
-    std::cerr << "L?" << std::endl;
     body->getTexture()->Unbind(GL_TEXTURE0);
-
-    std::cerr << "M?" << std::endl;
   }
 
   mSphereVAO.Release();
@@ -143,4 +130,4 @@ bool SimpleBodyRenderer::GetBoundingBox(VistaBoundingBox& bb) {
 void SimpleBodyRenderer::setBodies(const std::vector<std::shared_ptr<SimpleBody>>& bodies) {
   mBodies = bodies;
 }
-}
+} // namespace csp::simplebodies

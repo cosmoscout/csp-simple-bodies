@@ -9,11 +9,13 @@
 
 #include "../../../src/cs-core/PluginBase.hpp"
 #include "SimpleBody.hpp"
-#include "SimpleBodyRenderer.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
+#include <memory>
 
 namespace csp::simplebodies {
+
+class SimpleBodyRenderer;
 
 /// This plugin provides the rendering of planets as spheres with a texture. Despite its name it
 /// can also render moons :P. It can be configured via the applications config file. See README.md
@@ -35,7 +37,7 @@ class Plugin : public cs::core::PluginBase {
   Settings                                 mPluginSettings;
   std::vector<std::shared_ptr<SimpleBody>> mSimpleBodies;
   VistaOpenGLNode*                         mRendererNode;
-  SimpleBodyRenderer                       mBodyRenderer;
+  std::unique_ptr<SimpleBodyRenderer>      mBodyRenderer;
 };
 
 } // namespace csp::simplebodies

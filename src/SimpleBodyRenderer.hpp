@@ -38,6 +38,16 @@ class SimpleBodyRenderer : public IVistaOpenGLDraw {
   VistaBufferObject      mSphereVBO;
   VistaBufferObject      mSphereIBO;
 
+  struct {
+    uint32_t matProjection;
+    uint32_t surfaceTexture;
+    uint32_t farClip;
+    uint32_t sunDirection;
+    uint32_t ambientBrightness;
+    uint32_t matModelView;
+    uint32_t radii;
+  } mUniforms;
+
   std::vector<std::shared_ptr<SimpleBody>> mBodies;
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
 };

@@ -6,6 +6,8 @@
 
 #include "Plugin.hpp"
 
+#include "SimpleBodyRenderer.hpp"
+
 #include "../../../src/cs-core/InputManager.hpp"
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
@@ -68,10 +70,10 @@ void Plugin::init() {
     mSimpleBodies.push_back(body);
   }
 
-  mBodyRenderer = SimpleBodyRenderer();
-  mBodyRenderer.setBodies(mSimpleBodies);
-  mBodyRenderer.setSun(mSolarSystem->getSun());
-  mRendererNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), &mBodyRenderer);
+  mBodyRenderer = std::make_unique<SimpleBodyRenderer>();
+  mBodyRenderer->setBodies(mSimpleBodies);
+  mBodyRenderer->setSun(mSolarSystem->getSun());
+  mRendererNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), mBodyRenderer.get());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
