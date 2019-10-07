@@ -4,8 +4,8 @@
 //                        Copyright: (c) 2019 German Aerospace Center (DLR)                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CSP_SIMPLE_BODIES_SIMPLE_BODY_REMDERER_HPP
-#define CSP_SIMPLE_BODIES_SIMPLE_BODY_REMDERER_HPP
+#ifndef CSP_SIMPLE_BODIES_SIMPLE_BODY_RENDERER_HPP
+#define CSP_SIMPLE_BODIES_SIMPLE_BODY_RENDERER_HPP
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 #include <VistaOGLExt/VistaBufferObject.h>
@@ -46,11 +46,11 @@ class SimpleBodyRenderer : public IVistaOpenGLDraw {
     uint32_t ambientBrightness;
     uint32_t matModelView;
     uint32_t radii;
-  } mUniforms;
+  } mUniforms{};
 
   std::vector<std::shared_ptr<SimpleBody>> mBodies;
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
 };
 } // namespace csp::simplebodies
 
-#endif // CSP_SIMPLE_BODIES_SIMPLE_BODY_REMDERER_HPP
+#endif // CSP_SIMPLE_BODIES_SIMPLE_BODY_RENDERER_HPP
