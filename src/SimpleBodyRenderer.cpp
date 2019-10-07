@@ -6,6 +6,7 @@
 
 #include "SimpleBodyRenderer.hpp"
 #include "../../../src/cs-utils/FrameTimings.hpp"
+#include "../../../src/cs-utils/filesystem.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 #include "SimpleBody.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -56,9 +57,9 @@ SimpleBodyRenderer::SimpleBodyRenderer() {
 
   // create sphere shader
   mShader.InitVertexShaderFromString(
-      cs::utils::loadFileContentsToString("../share/resources/shaders/SimpleBody.vert.glsl"));
+      cs::utils::filesystem::loadToString("../share/resources/shaders/SimpleBody.vert.glsl"));
   mShader.InitFragmentShaderFromString(
-      cs::utils::loadFileContentsToString("../share/resources/shaders/SimpleBody.frag.glsl"));
+      cs::utils::filesystem::loadToString("../share/resources/shaders/SimpleBody.frag.glsl"));
   mShader.Link();
 
   mUniforms.matProjection     = mShader.GetUniformLocation("uMatProjection");
@@ -91,21 +92,27 @@ bool SimpleBodyRenderer::Do() {
   mShader.SetUniform(mUniforms.farClip, cs::utils::getCurrentFarClipDistance());
 
   for (const auto& body : mBodies) {
-    if (body->getCenterName() != "Sun") {
-      auto sunTransform    = mSun->getWorldTransform();
-      auto planetTransform = body->getWorldTransform();
-
-      auto sunDirection = sunTransform[3] - planetTransform[3];
-
-      mShader.SetUniform(mUniforms.sunDirection, sunDirection[0], sunDirection[1], sunDirection[2]);
-      mShader.SetUniform(mUniforms.ambientBrightness, 0.2f);
-    } else {
-      mShader.SetUniform(mUniforms.ambientBrightness, 1.f);
+    if(!body->getIsInExistence() || !body->pVisible.get()) {
+      continue;
     }
 
     // get modelview and projection matrices
     auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(body->getWorldTransform());
     glUniformMatrix4fv(mUniforms.matModelView, 1, GL_FALSE, glm::value_ptr(matMV));
+
+    if (body->getCenterName() != "Sun") {
+      auto sunTransform    = glm::make_mat4x4(glMatMV) * glm::mat4(mSun->getWorldTransform());
+      auto planetTransform = matMV;
+
+      auto sunDirection = glm::vec3(sunTransform[3]) - glm::vec3(planetTransform[3]);
+      sunDirection      = glm::normalize(sunDirection);
+
+      mShader.SetUniform(mUniforms.sunDirection, sunDirection[0],
+                         sunDirection[1], sunDirection[2]);
+      mShader.SetUniform(mUniforms.ambientBrightness, 0.2f);
+    } else {
+      mShader.SetUniform(mUniforms.ambientBrightness, 1.f);
+    }
 
     mShader.SetUniform(mUniforms.radii, (float)body->getRadii()[0], (float)body->getRadii()[0],
         (float)body->getRadii()[0]);
