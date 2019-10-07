@@ -11,7 +11,6 @@
 #include "../../../src/cs-core/InputManager.hpp"
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
-#include "../../../src/cs-utils/convert.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
@@ -35,13 +34,14 @@ namespace csp::simplebodies {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings::Body& o) {
-  o.mTexture = j.at("texture").get<std::string>();
+  o.mTexture = cs::core::parseProperty<std::string>("texture", j);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  o.mBodies = j.at("bodies").get<std::map<std::string, Plugin::Settings::Body>>();
+  cs::core::parseSection("csp-simple-bodies",
+      [&] { o.mBodies = cs::core::parseMap<std::string, Plugin::Settings::Body>("bodies", j); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,8 +59,9 @@ void Plugin::init() {
           "There is no Anchor \"" + bodySettings.first + "\" defined in the settings.");
     }
 
-    double tStartExistence = cs::utils::convert::toSpiceTime(anchor->second.mStartExistence);
-    double tEndExistence   = cs::utils::convert::toSpiceTime(anchor->second.mEndExistence);
+    auto   existence       = cs::core::getExistenceFromSettings(*anchor);
+    double tStartExistence = existence.first;
+    double tEndExistence   = existence.second;
 
     auto body = std::make_shared<SimpleBody>(bodySettings.second.mTexture, anchor->second.mCenter,
         anchor->second.mFrame, tStartExistence, tEndExistence);
