@@ -11,14 +11,12 @@ layout(location = 0) in vec2 iGridPos;
 out vec2 vTexCoords;
 out vec3 vPosition;
 out vec3 vCenter;
-out vec2 vLonLat;
 
 const float PI = 3.141592654;
 
 void main() {
     vTexCoords = vec2(iGridPos.x, 1 - iGridPos.y);
-    vLonLat.x = iGridPos.x * 2.0 * PI;
-    vLonLat.y = (iGridPos.y - 0.5) * PI;
+    vec2 vLonLat = vec2(iGridPos.x * 2.0 * PI, (iGridPos.y - 0.5) * PI);
     vPosition = uRadii * vec3(
         -sin(vLonLat.x) * cos(vLonLat.y),
         -cos(vLonLat.y + PI * 0.5),

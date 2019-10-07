@@ -7,10 +7,8 @@ uniform float uFarClip;
 
 // inputs
 in vec2 vTexCoords;
-in vec3 vSunDirection;
 in vec3 vPosition;
 in vec3 vCenter;
-in vec2 vLonLat;
 
 // outputs
 layout(location = 0) out vec3 oColor;
