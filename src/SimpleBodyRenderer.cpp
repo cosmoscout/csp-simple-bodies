@@ -127,6 +127,7 @@ bool SimpleBodyRenderer::Do() {
 bool SimpleBodyRenderer::GetBoundingBox(VistaBoundingBox& bb) {
   return false;
 }
+
 void SimpleBodyRenderer::setBodies(const std::vector<std::shared_ptr<SimpleBody>>& bodies) {
   mBodies = bodies;
 }
