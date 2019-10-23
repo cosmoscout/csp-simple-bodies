@@ -37,7 +37,6 @@ layout(location = 0) in vec2 iGridPos;
 
 // outputs
 out vec2 vTexCoords;
-out vec3 vSunDirection;
 out vec3 vPosition;
 out vec3 vCenter;
 out vec2 vLonLat;
@@ -47,7 +46,6 @@ const float PI = 3.141592654;
 void main()
 {
     vTexCoords = vec2(iGridPos.x, 1-iGridPos.y);
-    vSunDirection = gl_NormalMatrix * uSunDirection;
     vLonLat.x = iGridPos.x * 2.0 * PI;
     vLonLat.y = (iGridPos.y-0.5) * PI;
     vPosition = uRadii * vec3(
@@ -71,6 +69,7 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string SimpleBody::SPHERE_FRAG = R"(
+uniform vec3 uSunDirection;
 uniform sampler2D uSurfaceTexture;
 uniform float uAmbientBrightness;
 uniform float uSunIlluminance;
@@ -91,7 +90,7 @@ vec3 SRGBtoLINEAR(vec3 srgbIn)
   vec3 bLess = step(vec3(0.04045),srgbIn);
   return mix( srgbIn/vec3(12.92), pow((srgbIn+vec3(0.055))/vec3(1.055),vec3(2.4)), bLess );
 }
-
+    
 void main()
 {
     oColor = texture(uSurfaceTexture, vTexCoords).rgb;
@@ -104,7 +103,7 @@ void main()
 
     #ifdef ENABLE_LIGHTING
       vec3 normal = normalize(vPosition - vCenter);
-      float light = max(dot(normal, normalize(vSunDirection)), 0.0);
+      float light = max(dot(normal, uSunDirection), 0.0);
       oColor = mix(oColor*uAmbientBrightness, oColor, light);
     #endif
 
@@ -229,7 +228,7 @@ bool SimpleBody::Do() {
     mShader = new VistaGLSLShader();
 
     // create sphere shader
-    std::string defines = "#version 430 compatibility\n";
+    std::string defines = "#version 330\n";
 
     if (mGraphicsEngine->pEnableHDR.get()) {
       defines += "#define ENABLE_HDR\n";
@@ -291,6 +290,20 @@ bool SimpleBody::Do() {
       mShader->GetUniformLocation("uRadii"), (float)mRadii[0], (float)mRadii[0], (float)mRadii[0]);
   mShader->SetUniform(
       mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+
+  if (getCenterName() != "Sun") {
+    auto sunTransform    = glm::make_mat4x4(glMatMV) * glm::mat4(mSun->getWorldTransform());
+    auto planetTransform = matMV;
+
+    auto sunDirection = glm::vec3(sunTransform[3]) - glm::vec3(planetTransform[3]);
+    sunDirection      = glm::normalize(sunDirection);
+
+    mShader->SetUniform(mShader->GetUniformLocation("uSunDirection"), sunDirection[0],
+        sunDirection[1], sunDirection[2]);
+    mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), 0.2f);
+  } else {
+    mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), 1.f);
+  }
 
   mTexture->Bind(GL_TEXTURE0);
 
