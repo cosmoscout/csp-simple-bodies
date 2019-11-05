@@ -262,13 +262,11 @@ bool SimpleBody::Do() {
     ambientBrightness = 1.0f;
 
   } else if (mSun) {
-    sunDirection = mSolarSystem->pSunPosition.get() - glm::dvec3(getWorldTransform()[3]);
-
     if (mGraphicsEngine->pEnableHDR.get()) {
-      double sunDist = glm::length(sunDirection);
-      sunIlluminance =
-          mSolarSystem->pSunLuminousPower.get() / (sunDist * sunDist * 4.0 * glm::pi<double>());
+      sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
     }
+
+    sunDirection = mSolarSystem->getSunDirection(getWorldTransform()[3]);
   }
 
   mShader->SetUniform(mShader->GetUniformLocation("uSunDirection"), sunDirection[0],
