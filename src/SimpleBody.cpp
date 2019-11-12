@@ -71,7 +71,7 @@ void main()
 
 const std::string SimpleBody::SPHERE_FRAG = R"(
 uniform vec3 uSunDirection;
-uniform sampler2D uSurfaceTexture;
+layout(binding = 0) uniform sampler2D uSurfaceTexture;
 uniform float uAmbientBrightness;
 uniform float uSunIlluminance;
 uniform float uFarClip;
@@ -97,11 +97,11 @@ vec3 SRGBtoLINEAR(vec3 srgbIn)
 void main()
 {
     oColor = texture(uSurfaceTexture, vTexCoords).rgb;
-
+/*
     #ifdef ENABLE_HDR
       oColor = SRGBtoLINEAR(oColor);
     #endif
-
+*/
     oColor = oColor * uSunIlluminance;
 
     #ifdef ENABLE_LIGHTING
@@ -109,7 +109,7 @@ void main()
       float light = max(dot(normal, uSunDirection), 0.0);
       vec3 eclipseLight = applyEclipseShadows(vPosition, normal);
       oColor = eclipseLight * oColor;
-      oColor = mix(oColor*uAmbientBrightness, oColor, light);
+      oColor = mix(oColor * uAmbientBrightness, oColor, light);
     #endif
 
     gl_FragDepth = length(vPosition) / uFarClip;
@@ -223,12 +223,10 @@ glm::dvec3 SimpleBody::getRadii() const {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool SimpleBody::Do() {
-  std::cout << getCenterName() << 1 << std::endl;
   if (!getIsInExistence() || !pVisible.get()) {
     return true;
   }
 
-  std::cout << getCenterName() << 2 << std::endl;
   cs::utils::FrameTimings::ScopedTimer timer("Simple Planets");
 
   if (mShaderDirty) {
@@ -258,14 +256,11 @@ bool SimpleBody::Do() {
     mShaderDirty = false;
   }
 
-  std::cout << getCenterName() << 3 << std::endl;
   // set uniforms
   mShader->Bind();
 
-  std::cout << getCenterName() << 4 << std::endl;
-  mShadowReceiver.setupRender(*mShader, cs::graphics::EclipseCalcType::TEXTURE_LOOKUP, 1);
+  mShadowReceiver.setupRender(*mShader, cs::graphics::EclipseCalcType::AMD_APPROXIMIATION, 1);
 
-  std::cout << getCenterName() << 5 << std::endl;
   glm::vec3 sunDirection(1, 0, 0);
   float     sunIlluminance(1.f);
   float     ambientBrightness(mGraphicsEngine->pAmbientBrightness.get());
@@ -289,13 +284,11 @@ bool SimpleBody::Do() {
     }
   }
 
-  std::cout << getCenterName() << 6 << std::endl;
   mShader->SetUniform(mShader->GetUniformLocation("uSunDirection"), sunDirection[0],
       sunDirection[1], sunDirection[2]);
   mShader->SetUniform(mShader->GetUniformLocation("uSunIlluminance"), sunIlluminance);
   mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), ambientBrightness);
 
-  std::cout << getCenterName() << 7 << std::endl;
   // get modelview and projection matrices
   GLfloat glMatMV[16], glMatP[16];
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
@@ -311,7 +304,6 @@ bool SimpleBody::Do() {
   mShader->SetUniform(
       mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
-  std::cout << getCenterName() << 8 << std::endl;
   if (getCenterName() != "Sun") {
     auto sunTransform    = glm::make_mat4x4(glMatMV) * glm::mat4(mSun->getWorldTransform());
     auto planetTransform = matMV;
@@ -326,31 +318,23 @@ bool SimpleBody::Do() {
     mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), 1.f);
   }
 
-  std::cout << getCenterName() << 9 << std::endl;
   mTexture->Bind(GL_TEXTURE0);
 
-  std::cout << getCenterName() << 10 << std::endl;
   // draw
   mSphereVAO.Bind();
 
-  std::cout << getCenterName() << 11 << std::endl;
   glDrawElements(GL_TRIANGLE_STRIP, (GRID_RESOLUTION_X - 1) * (2 + 2 * GRID_RESOLUTION_Y),
       GL_UNSIGNED_INT, nullptr);
 
-  std::cout << getCenterName() << 12 << std::endl;
   mSphereVAO.Release();
 
-  std::cout << getCenterName() << 13 << std::endl;
   // clean up
   mTexture->Unbind(GL_TEXTURE0);
 
-  std::cout << getCenterName() << 14 << std::endl;
-  mShadowReceiver.cleanUpRender(cs::graphics::EclipseCalcType::TEXTURE_LOOKUP, 1);
+  mShadowReceiver.cleanUpRender(cs::graphics::EclipseCalcType::AMD_APPROXIMIATION, 1);
 
-  std::cout << getCenterName() << 15 << std::endl;
   mShader->Release();
 
-  std::cout << getCenterName() << 16 << std::endl;
   return true;
 }
 
