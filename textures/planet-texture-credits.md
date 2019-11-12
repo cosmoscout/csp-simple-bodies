@@ -11,3 +11,5 @@ saturn.jpg | https://www.solarsystemscope.com/textures/ | CC-BY
 uranus.jpg | https://www.solarsystemscope.com/textures/ | CC-BY
 neptune.jpg | https://www.solarsystemscope.com/textures/ | CC-BY
 earth.jpg | https://visibleearth.nasa.gov/ | Public Domain
+io.jpg | https://bjj.mmedia.is/data/ by Björn Jónsson | Public Domain
+callisto.jpg | https://bjj.mmedia.is/data/ by Björn Jónsson | Public Domain 

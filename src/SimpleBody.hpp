@@ -13,6 +13,7 @@
 #include <VistaOGLExt/VistaTexture.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
+#include "../../../src/cs-graphics/EclipseShadowReceiver.hpp"
 #include "../../../src/cs-scene/CelestialBody.hpp"
 
 namespace cs::core {
@@ -25,8 +26,8 @@ namespace csp::simplebodies {
 /// This is just a sphere with a texture...
 class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
-  SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
-      std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+  SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
+      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
       double tEndExistence);
   ~SimpleBody() override = default;
@@ -45,6 +46,8 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
   std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
   std::shared_ptr<VistaTexture>             mTexture;
+
+  cs::graphics::EclipseShadowReceiver mShadowReceiver;
 
   VistaGLSLShader*       mShader = nullptr;
   VistaVertexArrayObject mSphereVAO;
