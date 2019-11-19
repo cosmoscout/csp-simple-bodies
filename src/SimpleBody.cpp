@@ -97,19 +97,21 @@ vec3 SRGBtoLINEAR(vec3 srgbIn)
 void main()
 {
     oColor = texture(uSurfaceTexture, vTexCoords).rgb;
-/*
+
     #ifdef ENABLE_HDR
       oColor = SRGBtoLINEAR(oColor);
     #endif
-*/
-    oColor = oColor * uSunIlluminance;
 
     #ifdef ENABLE_LIGHTING
       vec3 normal = normalize(vPosition - vCenter);
       float light = max(dot(normal, uSunDirection), 0.0);
       vec3 eclipseLight = applyEclipseShadows(vPosition, normal);
-      oColor = eclipseLight * oColor;
+
+      oColor = uSunIlluminance * eclipseLight * oColor;
       oColor = mix(oColor * uAmbientBrightness, oColor, light);
+
+    #else
+      oColor = oColor * uSunIlluminance;
     #endif
 
     gl_FragDepth = length(vPosition) / uFarClip;
