@@ -8,7 +8,6 @@
 
 #include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
-#include "../../../src/cs-graphics/EclipseShadowReceiver.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
 #include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/utils.hpp"
@@ -261,7 +260,7 @@ bool SimpleBody::Do() {
   // set uniforms
   mShader->Bind();
 
-  mShadowReceiver.setupRender(*mShader, cs::graphics::EclipseCalcType::TEXTURE_LOOKUP, 1);
+  mShadowReceiver.setupRender(*mShader, cs::core::EclipseCalcType::TEXTURE_LOOKUP, 1);
 
   glm::vec3 sunDirection(1, 0, 0);
   float     sunIlluminance(1.f);
@@ -317,7 +316,7 @@ bool SimpleBody::Do() {
   // clean up
   mTexture->Unbind(GL_TEXTURE0);
 
-  mShadowReceiver.cleanUpRender(cs::graphics::EclipseCalcType::TEXTURE_LOOKUP, 1);
+  mShadowReceiver.cleanUpRender(cs::core::EclipseCalcType::TEXTURE_LOOKUP, 1);
 
   mShader->Release();
 

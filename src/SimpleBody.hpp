@@ -13,7 +13,7 @@
 #include <VistaOGLExt/VistaTexture.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
-#include "../../../src/cs-graphics/EclipseShadowReceiver.hpp"
+#include "../../../src/cs-core/EclipseShadowReceiver.hpp"
 #include "../../../src/cs-scene/CelestialBody.hpp"
 
 namespace cs::core {
@@ -47,7 +47,7 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
   std::shared_ptr<VistaTexture>             mTexture;
 
-  cs::graphics::EclipseShadowReceiver mShadowReceiver;
+  cs::core::EclipseShadowReceiver mShadowReceiver;
 
   VistaGLSLShader*       mShader = nullptr;
   VistaVertexArrayObject mSphereVAO;
