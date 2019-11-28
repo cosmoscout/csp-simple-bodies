@@ -261,7 +261,7 @@ bool SimpleBody::Do() {
   // set uniforms
   mShader->Bind();
 
-  mShadowReceiver.setupRender(*mShader, cs::graphics::EclipseCalcType::TEXTURE_LOOKUP, 1);
+  mShadowReceiver.setupRender(*mShader, cs::graphics::EclipseCalcType::CARTESIAN_TEXTURE_LOOKUP, 1);
 
   glm::vec3 sunDirection(1, 0, 0);
   float     sunIlluminance(1.f);
@@ -317,7 +317,7 @@ bool SimpleBody::Do() {
   // clean up
   mTexture->Unbind(GL_TEXTURE0);
 
-  mShadowReceiver.cleanUpRender(cs::graphics::EclipseCalcType::TEXTURE_LOOKUP, 1);
+  mShadowReceiver.cleanUpRender(cs::graphics::EclipseCalcType::CARTESIAN_TEXTURE_LOOKUP, 1);
 
   mShader->Release();
 
