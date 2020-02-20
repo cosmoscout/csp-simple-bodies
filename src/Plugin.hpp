@@ -27,6 +27,8 @@ class Plugin : public cs::core::PluginBase {
     std::map<std::string, Body> mBodies;
   };
 
+  Plugin();
+
   void init() override;
   void deInit() override;
 

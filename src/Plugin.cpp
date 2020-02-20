@@ -9,6 +9,7 @@
 #include "../../../src/cs-core/InputManager.hpp"
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
+#include "../../../src/cs-utils/logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
@@ -44,8 +45,16 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Plugin::Plugin() {
+  // Create default logger for this plugin.
+  spdlog::set_default_logger(cs::utils::logger::createLogger("csp-simple-bodies"));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Plugin::init() {
-  std::cout << "Loading: CosmoScout VR Plugin Simple Bodies" << std::endl;
+
+  spdlog::info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-simple-bodies");
 
@@ -70,11 +79,15 @@ void Plugin::init() {
     mSimpleBodyNodes.push_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), body.get()));
     mSimpleBodies.push_back(body);
   }
+
+  spdlog::info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
+  spdlog::info("Unloading plugin...");
+
   for (auto const& simpleBody : mSimpleBodies) {
     mSolarSystem->unregisterBody(simpleBody);
     mInputManager->unregisterSelectable(simpleBody);
@@ -83,6 +96,8 @@ void Plugin::deInit() {
   for (auto const& simpleBodyNode : mSimpleBodyNodes) {
     mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode);
   }
+
+  spdlog::info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
