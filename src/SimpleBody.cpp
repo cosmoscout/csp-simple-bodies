@@ -163,8 +163,17 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphics
   mSphereIBO.Release();
   mSphereVBO.Release();
 
-  mGraphicsEngine->pEnableLighting.onChange().connect([this](bool) { mShaderDirty = true; });
-  mGraphicsEngine->pEnableHDR.onChange().connect([this](bool) { mShaderDirty = true; });
+  mEnableLightingConnection =
+      mGraphicsEngine->pEnableLighting.onChange().connect([this](bool) { mShaderDirty = true; });
+  mEnableHDRConnection =
+      mGraphicsEngine->pEnableHDR.onChange().connect([this](bool) { mShaderDirty = true; });
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+SimpleBody::~SimpleBody() {
+  mGraphicsEngine->pEnableLighting.onChange().disconnect(mEnableLightingConnection);
+  mGraphicsEngine->pEnableHDR.onChange().disconnect(mEnableHDRConnection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -29,7 +29,7 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
       std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
       double tEndExistence);
-  ~SimpleBody() override = default;
+  ~SimpleBody();
 
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
 
@@ -55,7 +55,9 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
 
   glm::dvec3 mRadii;
 
-  bool mShaderDirty = true;
+  bool mShaderDirty              = true;
+  int  mEnableLightingConnection = -1;
+  int  mEnableHDRConnection      = -1;
 
   static const std::string SPHERE_VERT;
   static const std::string SPHERE_FRAG;
