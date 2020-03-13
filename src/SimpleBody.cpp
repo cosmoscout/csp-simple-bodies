@@ -124,7 +124,8 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphics
     , mRadii(cs::core::SolarSystem::getRadii(sCenterName)) {
   pVisibleRadius = mRadii[0];
 
-  // For rendering the sphere, we create a 2D-grid which is warped into a sphere in the vertex shader. The vertex positions are directly used as texture coordinates.
+  // For rendering the sphere, we create a 2D-grid which is warped into a sphere in the vertex
+  // shader. The vertex positions are directly used as texture coordinates.
   std::vector<float>    vertices(GRID_RESOLUTION_X * GRID_RESOLUTION_Y * 2);
   std::vector<unsigned> indices((GRID_RESOLUTION_X - 1) * (2 + 2 * GRID_RESOLUTION_Y));
 

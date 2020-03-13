@@ -22,7 +22,8 @@ class SolarSystem;
 
 namespace csp::simplebodies {
 
-/// This is just a sphere with a texture, attached to the given SPICE frame. The texture should be in equirectangular projection.
+/// This is just a sphere with a texture, attached to the given SPICE frame. The texture should be
+/// in equirectangular projection.
 class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
   SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
@@ -30,11 +31,12 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
       std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
       double tEndExistence);
   ~SimpleBody();
-  
+
   /// The sun object is used for lighting computation.
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
-  
-  /// Interface implementation of the IntersectableObject, which is a base class of the CelestialBody.
+
+  /// Interface implementation of the IntersectableObject, which is a base class of the
+  /// CelestialBody.
   bool getIntersection(
       glm::dvec3 const& rayOrigin, glm::dvec3 const& rayDir, glm::dvec3& pos) const override;
 
