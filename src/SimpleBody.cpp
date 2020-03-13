@@ -124,7 +124,7 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphics
     , mRadii(cs::core::SolarSystem::getRadii(sCenterName)) {
   pVisibleRadius = mRadii[0];
 
-  // create sphere grid geometry
+  // For rendering the sphere, we create a 2D-grid which is warped into a sphere in the vertex shader. The vertex positions are directly used as texture coordinates.
   std::vector<float>    vertices(GRID_RESOLUTION_X * GRID_RESOLUTION_Y * 2);
   std::vector<unsigned> indices((GRID_RESOLUTION_X - 1) * (2 + 2 * GRID_RESOLUTION_Y));
 
@@ -163,6 +163,7 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphics
   mSphereIBO.Release();
   mSphereVBO.Release();
 
+  // Recreate the shader if lighting or HDR rendering mode are toggled.
   mEnableLightingConnection =
       mGraphicsEngine->pEnableLighting.onChange().connect([this](bool) { mShaderDirty = true; });
   mEnableHDRConnection =
@@ -189,7 +190,7 @@ bool SimpleBody::getIntersection(
 
   glm::dmat4 transform = glm::inverse(getWorldTransform());
 
-  // Transform ray into planet coordinate system
+  // Transform ray into planet coordinate system.
   glm::dvec4 origin(rayOrigin, 1.0);
   origin = transform * origin;
 
@@ -214,6 +215,7 @@ bool SimpleBody::getIntersection(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 double SimpleBody::getHeight(glm::dvec2 lngLat) const {
+  // This is why we call them 'SimpleBodies'.
   return 0;
 }
 
@@ -236,7 +238,7 @@ bool SimpleBody::Do() {
     delete mShader;
     mShader = new VistaGLSLShader();
 
-    // create sphere shader
+    // (Re-)create sphere shader.
     std::string defines = "#version 330\n";
 
     if (mGraphicsEngine->pEnableHDR.get()) {
@@ -254,7 +256,6 @@ bool SimpleBody::Do() {
     mShaderDirty = false;
   }
 
-  // set uniforms
   mShader->Bind();
 
   glm::vec3 sunDirection(1, 0, 0);
@@ -262,6 +263,7 @@ bool SimpleBody::Do() {
   float     ambientBrightness(mGraphicsEngine->pAmbientBrightness.get());
 
   if (getCenterName() == "Sun") {
+    // If the SimpleBody is actually the sun, we have to calculate the lighting differently.
     if (mGraphicsEngine->pEnableHDR.get()) {
       double sceneScale = 1.0 / mSolarSystem->getObserver().getAnchorScale();
       sunIlluminance    = mSolarSystem->pSunLuminousPower.get() /
@@ -271,6 +273,7 @@ bool SimpleBody::Do() {
     ambientBrightness = 1.0f;
 
   } else if (mSun) {
+    // For all other bodies we can use the utility methods from the SolarSystem.
     if (mGraphicsEngine->pEnableHDR.get()) {
       sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
     }
@@ -283,7 +286,7 @@ bool SimpleBody::Do() {
   mShader->SetUniform(mShader->GetUniformLocation("uSunIlluminance"), sunIlluminance);
   mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), ambientBrightness);
 
-  // get modelview and projection matrices
+  // Get modelview and projection matrices.
   GLfloat glMatMV[16], glMatP[16];
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
@@ -300,15 +303,14 @@ bool SimpleBody::Do() {
 
   mTexture->Bind(GL_TEXTURE0);
 
-  // draw
+  // Draw.
   mSphereVAO.Bind();
   glDrawElements(GL_TRIANGLE_STRIP, (GRID_RESOLUTION_X - 1) * (2 + 2 * GRID_RESOLUTION_Y),
       GL_UNSIGNED_INT, nullptr);
   mSphereVAO.Release();
 
-  // clean up
+  // Clean up.
   mTexture->Unbind(GL_TEXTURE0);
-
   mShader->Release();
 
   return true;
