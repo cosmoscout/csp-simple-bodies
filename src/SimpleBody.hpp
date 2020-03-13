@@ -35,12 +35,12 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   /// The sun object is used for lighting computation.
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
 
-  /// Interface implementation of the IntersectableObject, which is a base class of the
+  /// Interface implementation of the IntersectableObject, which is a base class of
   /// CelestialBody.
   bool getIntersection(
       glm::dvec3 const& rayOrigin, glm::dvec3 const& rayDir, glm::dvec3& pos) const override;
 
-  /// Interface implementation of the CelestialBody.
+  /// Interface implementation of CelestialBody.
   double     getHeight(glm::dvec2 lngLat) const override;
   glm::dvec3 getRadii() const override;
 
