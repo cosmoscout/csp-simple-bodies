@@ -298,20 +298,6 @@ bool SimpleBody::Do() {
   mShader->SetUniform(
       mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
-  if (getCenterName() != "Sun") {
-    auto sunTransform    = glm::make_mat4x4(glMatMV) * glm::mat4(mSun->getWorldTransform());
-    auto planetTransform = matMV;
-
-    auto sunDirection = glm::vec3(sunTransform[3]) - glm::vec3(planetTransform[3]);
-    sunDirection      = glm::normalize(sunDirection);
-
-    mShader->SetUniform(mShader->GetUniformLocation("uSunDirection"), sunDirection[0],
-        sunDirection[1], sunDirection[2]);
-    mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), 0.2f);
-  } else {
-    mShader->SetUniform(mShader->GetUniformLocation("uAmbientBrightness"), 1.f);
-  }
-
   mTexture->Bind(GL_TEXTURE0);
 
   // draw
