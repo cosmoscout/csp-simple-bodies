@@ -236,8 +236,7 @@ bool SimpleBody::Do() {
   cs::utils::FrameTimings::ScopedTimer timer("Simple Planets");
 
   if (mShaderDirty) {
-    delete mShader;
-    mShader = new VistaGLSLShader();
+    mShader = std::make_unique<VistaGLSLShader>();
 
     // (Re-)create sphere shader.
     std::string defines = "#version 330\n";
