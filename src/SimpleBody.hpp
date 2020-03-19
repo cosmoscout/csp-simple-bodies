@@ -51,12 +51,13 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  private:
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
   std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
-  std::shared_ptr<VistaTexture>             mTexture;
 
-  std::unique_ptr<VistaGLSLShader> mShader = nullptr;
-  VistaVertexArrayObject           mSphereVAO;
-  VistaBufferObject                mSphereVBO;
-  VistaBufferObject                mSphereIBO;
+  std::unique_ptr<VistaTexture>             mTexture;
+
+  VistaGLSLShader        mShader;
+  VistaVertexArrayObject mSphereVAO;
+  VistaBufferObject      mSphereVBO;
+  VistaBufferObject      mSphereIBO;
 
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
 
