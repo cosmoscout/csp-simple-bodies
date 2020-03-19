@@ -166,16 +166,16 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphics
 
   // Recreate the shader if lighting or HDR rendering mode are toggled.
   mEnableLightingConnection =
-      mGraphicsEngine->pEnableLighting.onChange().connect([this](bool) { mShaderDirty = true; });
+      mGraphicsEngine->pEnableLighting.connect([this](bool) { mShaderDirty = true; });
   mEnableHDRConnection =
-      mGraphicsEngine->pEnableHDR.onChange().connect([this](bool) { mShaderDirty = true; });
+      mGraphicsEngine->pEnableHDR.connect([this](bool) { mShaderDirty = true; });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 SimpleBody::~SimpleBody() {
-  mGraphicsEngine->pEnableLighting.onChange().disconnect(mEnableLightingConnection);
-  mGraphicsEngine->pEnableHDR.onChange().disconnect(mEnableHDRConnection);
+  mGraphicsEngine->pEnableLighting.disconnect(mEnableLightingConnection);
+  mGraphicsEngine->pEnableHDR.disconnect(mEnableHDRConnection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
