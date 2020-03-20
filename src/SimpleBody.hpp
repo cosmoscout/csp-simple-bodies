@@ -52,7 +52,7 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
   std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
 
-  std::unique_ptr<VistaTexture>             mTexture;
+  std::unique_ptr<VistaTexture> mTexture;
 
   VistaGLSLShader        mShader;
   VistaVertexArrayObject mSphereVAO;
