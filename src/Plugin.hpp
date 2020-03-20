@@ -33,9 +33,9 @@ class Plugin : public cs::core::PluginBase {
   void deInit() override;
 
  private:
-  Settings                                 mPluginSettings;
-  std::vector<std::shared_ptr<SimpleBody>> mSimpleBodies;
-  std::vector<VistaOpenGLNode*>            mSimpleBodyNodes;
+  Settings                                      mPluginSettings;
+  std::vector<std::shared_ptr<SimpleBody>>      mSimpleBodies;
+  std::vector<std::unique_ptr<VistaOpenGLNode>> mSimpleBodyNodes;
 };
 
 } // namespace csp::simplebodies
