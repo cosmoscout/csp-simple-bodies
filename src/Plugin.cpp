@@ -79,12 +79,11 @@ void Plugin::init() {
     mInputManager->registerSelectable(body);
 
     body->setSun(mSolarSystem->getSun());
-    auto parent = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), body.get());
-    mSimpleBodyNodes.push_back(parent);
-    mSimpleBodies.push_back(body);
+    mSimpleBodyNodes.emplace_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), body.get()));
+    mSimpleBodies.emplace_back(body);
 
     VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        parent, static_cast<int>(cs::utils::DrawOrder::ePlanets));
+        mSimpleBodyNodes.back().get(), static_cast<int>(cs::utils::DrawOrder::ePlanets));
   }
 
   spdlog::info("Loading done.");
@@ -101,7 +100,7 @@ void Plugin::deInit() {
   }
 
   for (auto const& simpleBodyNode : mSimpleBodyNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode);
+    mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode.get());
   }
 
   spdlog::info("Unloading done.");
