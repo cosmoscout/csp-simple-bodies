@@ -34,15 +34,22 @@ namespace csp::simplebodies {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Body& o) {
-  o.mTexture = cs::core::parseProperty<std::string>("texture", j);
+void from_json(nlohmann::json const& j, Plugin::Settings::Body& o) {
+  cs::core::Settings::deserialize(j, "texture", o.mTexture);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings::Body const& o) {
+  cs::core::Settings::serialize(j, "texture", o.mTexture);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-simple-bodies",
-      [&] { o.mBodies = cs::core::parseMap<std::string, Plugin::Settings::Body>("bodies", j); });
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+  cs::core::Settings::deserialize(j, "bodies", o.mBodies);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings const& o) {
+  cs::core::Settings::serialize(j, "bodies", o.mBodies);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
