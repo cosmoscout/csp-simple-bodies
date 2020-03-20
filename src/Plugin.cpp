@@ -75,9 +75,7 @@ void Plugin::init() {
           "There is no Anchor \"" + bodySettings.first + "\" defined in the settings.");
     }
 
-    auto   existence       = cs::core::getExistenceFromSettings(*anchor);
-    double tStartExistence = existence.first;
-    double tEndExistence   = existence.second;
+    auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
 
     auto body =
         std::make_shared<SimpleBody>(mGraphicsEngine, mSolarSystem, bodySettings.second.mTexture,
