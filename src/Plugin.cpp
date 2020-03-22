@@ -78,7 +78,7 @@ void Plugin::init() {
     auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
 
     auto body =
-        std::make_shared<SimpleBody>(mGraphicsEngine, mSolarSystem, bodySettings.second.mTexture,
+        std::make_shared<SimpleBody>(mAllSettings, mSolarSystem, bodySettings.second.mTexture,
             anchor->second.mCenter, anchor->second.mFrame, tStartExistence, tEndExistence);
     mSolarSystem->registerBody(body);
     mInputManager->registerSelectable(body);

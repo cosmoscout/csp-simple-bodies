@@ -16,7 +16,7 @@
 #include "../../../src/cs-scene/CelestialBody.hpp"
 
 namespace cs::core {
-class GraphicsEngine;
+class Settings;
 class SolarSystem;
 } // namespace cs::core
 
@@ -26,7 +26,7 @@ namespace csp::simplebodies {
 /// in equirectangular projection.
 class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
-  SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+  SimpleBody(std::shared_ptr<cs::core::Settings> const& settings,
       std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
       double tEndExistence);
@@ -49,8 +49,8 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   bool GetBoundingBox(VistaBoundingBox& bb) override;
 
  private:
-  std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
-  std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
+  std::shared_ptr<cs::core::Settings>    mSettings;
+  std::shared_ptr<cs::core::SolarSystem> mSolarSystem;
 
   std::unique_ptr<VistaTexture> mTexture;
 
