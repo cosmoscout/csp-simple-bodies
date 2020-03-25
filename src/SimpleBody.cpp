@@ -265,8 +265,9 @@ bool SimpleBody::Do() {
     // If the SimpleBody is actually the sun, we have to calculate the lighting differently.
     if (mGraphicsEngine->pEnableHDR.get()) {
       double sceneScale = 1.0 / mSolarSystem->getObserver().getAnchorScale();
-      sunIlluminance    = mSolarSystem->pSunLuminousPower.get() /
-                       (sceneScale * sceneScale * mRadii[0] * mRadii[0] * 4.0 * glm::pi<double>());
+      sunIlluminance    = static_cast<float>(
+          mSolarSystem->pSunLuminousPower.get() /
+          (sceneScale * sceneScale * mRadii[0] * mRadii[0] * 4.0 * glm::pi<double>()));
     }
 
     ambientBrightness = 1.0f;
@@ -274,7 +275,7 @@ bool SimpleBody::Do() {
   } else if (mSun) {
     // For all other bodies we can use the utility methods from the SolarSystem.
     if (mGraphicsEngine->pEnableHDR.get()) {
-      sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
+      sunIlluminance = static_cast<float>(mSolarSystem->getSunIlluminance(getWorldTransform()[3]));
     }
 
     sunDirection = mSolarSystem->getSunDirection(getWorldTransform()[3]);
