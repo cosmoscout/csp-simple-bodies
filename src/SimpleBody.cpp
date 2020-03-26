@@ -21,8 +21,8 @@ namespace csp::simplebodies {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const unsigned GRID_RESOLUTION_X = 200;
-const unsigned GRID_RESOLUTION_Y = 100;
+const size_t GRID_RESOLUTION_X = 200;
+const size_t GRID_RESOLUTION_Y = 100;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -129,8 +129,8 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphics
   std::vector<float>    vertices(GRID_RESOLUTION_X * GRID_RESOLUTION_Y * 2);
   std::vector<unsigned> indices((GRID_RESOLUTION_X - 1) * (2 + 2 * GRID_RESOLUTION_Y));
 
-  for (int x = 0; x < GRID_RESOLUTION_X; ++x) {
-    for (int y = 0; y < GRID_RESOLUTION_Y; ++y) {
+  for (size_t x = 0; x < GRID_RESOLUTION_X; ++x) {
+    for (size_t y = 0; y < GRID_RESOLUTION_Y; ++y) {
       vertices[(x * GRID_RESOLUTION_Y + y) * 2 + 0] = 1.f / (GRID_RESOLUTION_X - 1) * x;
       vertices[(x * GRID_RESOLUTION_Y + y) * 2 + 1] = 1.f / (GRID_RESOLUTION_Y - 1) * y;
     }
@@ -138,9 +138,9 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphics
 
   int index = 0;
 
-  for (int x = 0; x < GRID_RESOLUTION_X - 1; ++x) {
+  for (size_t x = 0; x < GRID_RESOLUTION_X - 1; ++x) {
     indices[index++] = x * GRID_RESOLUTION_Y;
-    for (int y = 0; y < GRID_RESOLUTION_Y; ++y) {
+    for (size_t y = 0; y < GRID_RESOLUTION_Y; ++y) {
       indices[index++] = x * GRID_RESOLUTION_Y + y;
       indices[index++] = (x + 1) * GRID_RESOLUTION_Y + y;
     }
