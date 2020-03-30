@@ -16,6 +16,7 @@
 #include <VistaOGLExt/VistaOGLUtils.h>
 
 #include <glm/gtc/type_ptr.hpp>
+#include <utility>
 
 namespace csp::simplebodies {
 
@@ -113,13 +114,13 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
-    std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
+    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
     std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
     double tEndExistence)
     : cs::scene::CelestialBody(sCenterName, sFrameName, tStartExistence, tEndExistence)
-    , mGraphicsEngine(graphicsEngine)
-    , mSolarSystem(solarSystem)
+    , mGraphicsEngine(std::move(graphicsEngine))
+    , mSolarSystem(std::move(solarSystem))
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mRadii(cs::core::SolarSystem::getRadii(sCenterName)) {
   pVisibleRadius = mRadii[0];

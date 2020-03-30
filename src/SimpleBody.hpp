@@ -26,8 +26,8 @@ namespace csp::simplebodies {
 /// in equirectangular projection.
 class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
-  SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
-      std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+  SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
+      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
       double tEndExistence);
   ~SimpleBody();
