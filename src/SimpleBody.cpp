@@ -27,7 +27,7 @@ const uint32_t GRID_RESOLUTION_Y = 100;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string SimpleBody::SPHERE_VERT = R"(
+const char* SimpleBody::SPHERE_VERT = R"(
 uniform vec3 uSunDirection;
 uniform vec3 uRadii;
 uniform mat4 uMatModelView;
@@ -69,7 +69,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string SimpleBody::SPHERE_FRAG = R"(
+const char* SimpleBody::SPHERE_FRAG = R"(
 uniform vec3 uSunDirection;
 uniform sampler2D uSurfaceTexture;
 uniform float uAmbientBrightness;
@@ -132,8 +132,8 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
   for (uint32_t x = 0; x < GRID_RESOLUTION_X; ++x) {
     for (uint32_t y = 0; y < GRID_RESOLUTION_Y; ++y) {
-      vertices[(x * GRID_RESOLUTION_Y + y) * 2 + 0] = 1.f / (GRID_RESOLUTION_X - 1) * x;
-      vertices[(x * GRID_RESOLUTION_Y + y) * 2 + 1] = 1.f / (GRID_RESOLUTION_Y - 1) * y;
+      vertices[(x * GRID_RESOLUTION_Y + y) * 2 + 0] = 1.F / (GRID_RESOLUTION_X - 1) * x;
+      vertices[(x * GRID_RESOLUTION_Y + y) * 2 + 1] = 1.F / (GRID_RESOLUTION_Y - 1) * y;
     }
   }
 
@@ -167,8 +167,9 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
   // Recreate the shader if lighting or HDR rendering mode are toggled.
   mEnableLightingConnection =
-      mGraphicsEngine->pEnableLighting.connect([this](bool) { mShaderDirty = true; });
-  mEnableHDRConnection = mGraphicsEngine->pEnableHDR.connect([this](bool) { mShaderDirty = true; });
+      mGraphicsEngine->pEnableLighting.connect([this](bool /*enabled*/) { mShaderDirty = true; });
+  mEnableHDRConnection =
+      mGraphicsEngine->pEnableHDR.connect([this](bool /*enabled*/) { mShaderDirty = true; });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +216,7 @@ bool SimpleBody::getIntersection(
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-double SimpleBody::getHeight(glm::dvec2 lngLat) const {
+double SimpleBody::getHeight(glm::dvec2 /*lngLat*/) const {
   // This is why we call them 'SimpleBodies'.
   return 0;
 }
@@ -259,7 +260,7 @@ bool SimpleBody::Do() {
   mShader.Bind();
 
   glm::vec3 sunDirection(1, 0, 0);
-  float     sunIlluminance(1.f);
+  float     sunIlluminance(1.F);
   float     ambientBrightness(mGraphicsEngine->pAmbientBrightness.get());
 
   if (getCenterName() == "Sun") {
@@ -271,7 +272,7 @@ bool SimpleBody::Do() {
           (sceneScale * sceneScale * mRadii[0] * mRadii[0] * 4.0 * glm::pi<double>()));
     }
 
-    ambientBrightness = 1.0f;
+    ambientBrightness = 1.0F;
 
   } else if (mSun) {
     // For all other bodies we can use the utility methods from the SolarSystem.
@@ -288,17 +289,18 @@ bool SimpleBody::Do() {
   mShader.SetUniform(mShader.GetUniformLocation("uAmbientBrightness"), ambientBrightness);
 
   // Get modelview and projection matrices.
-  GLfloat glMatMV[16], glMatP[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
-  auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(getWorldTransform());
+  std::array<GLfloat, 16> glMatMV{};
+  std::array<GLfloat, 16> glMatP{};
+  glGetFloatv(GL_MODELVIEW_MATRIX, glMatMV.data());
+  glGetFloatv(GL_PROJECTION_MATRIX, glMatP.data());
+  auto matMV = glm::make_mat4x4(glMatMV.data()) * glm::mat4(getWorldTransform());
   glUniformMatrix4fv(
       mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(mShader.GetUniformLocation("uSurfaceTexture"), 0);
-  mShader.SetUniform(
-      mShader.GetUniformLocation("uRadii"), (float)mRadii[0], (float)mRadii[0], (float)mRadii[0]);
+  mShader.SetUniform(mShader.GetUniformLocation("uRadii"), static_cast<float>(mRadii[0]),
+      static_cast<float>(mRadii[0]), static_cast<float>(mRadii[0]));
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
@@ -319,7 +321,7 @@ bool SimpleBody::Do() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SimpleBody::GetBoundingBox(VistaBoundingBox& bb) {
+bool SimpleBody::GetBoundingBox(VistaBoundingBox& /*bb*/) {
   return false;
 }
 

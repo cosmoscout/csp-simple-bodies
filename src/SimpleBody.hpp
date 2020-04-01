@@ -67,8 +67,8 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   int  mEnableLightingConnection = -1;
   int  mEnableHDRConnection      = -1;
 
-  static const std::string SPHERE_VERT;
-  static const std::string SPHERE_FRAG;
+  static const char* SPHERE_VERT;
+  static const char* SPHERE_FRAG;
 };
 
 } // namespace csp::simplebodies
