@@ -30,6 +30,13 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
       std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
       double tEndExistence);
+
+  SimpleBody(SimpleBody const& other) = delete;
+  SimpleBody(SimpleBody&& other)      = delete;
+
+  SimpleBody& operator=(SimpleBody const& other) = delete;
+  SimpleBody& operator=(SimpleBody&& other) = delete;
+
   ~SimpleBody();
 
   /// The sun object is used for lighting computation.
