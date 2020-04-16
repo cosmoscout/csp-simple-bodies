@@ -26,10 +26,17 @@ namespace csp::simplebodies {
 /// in equirectangular projection.
 class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
-  SimpleBody(std::shared_ptr<cs::core::Settings> const& settings,
-      std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+  SimpleBody(std::shared_ptr<cs::core::Settings> settings,
+      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
       double tEndExistence);
+
+  SimpleBody(SimpleBody const& other) = delete;
+  SimpleBody(SimpleBody&& other)      = delete;
+
+  SimpleBody& operator=(SimpleBody const& other) = delete;
+  SimpleBody& operator=(SimpleBody&& other) = delete;
+
   ~SimpleBody();
 
   /// The sun object is used for lighting computation.
@@ -67,8 +74,8 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   int  mEnableLightingConnection = -1;
   int  mEnableHDRConnection      = -1;
 
-  static const std::string SPHERE_VERT;
-  static const std::string SPHERE_FRAG;
+  static const char* SPHERE_VERT;
+  static const char* SPHERE_FRAG;
 };
 
 } // namespace csp::simplebodies
