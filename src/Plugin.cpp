@@ -11,6 +11,7 @@
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-utils/logger.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
@@ -49,7 +50,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 void Plugin::init() {
 
-  spdlog::info("Loading plugin...");
+  logger()->info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-simple-bodies");
 
@@ -79,13 +80,13 @@ void Plugin::init() {
         mSimpleBodyNodes.back().get(), static_cast<int>(cs::utils::DrawOrder::ePlanets));
   }
 
-  spdlog::info("Loading done.");
+  logger()->info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
-  spdlog::info("Unloading plugin...");
+  logger()->info("Unloading plugin...");
 
   for (auto const& simpleBody : mSimpleBodies) {
     mSolarSystem->unregisterBody(simpleBody);
@@ -96,7 +97,7 @@ void Plugin::deInit() {
     mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode.get());
   }
 
-  spdlog::info("Unloading done.");
+  logger()->info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
