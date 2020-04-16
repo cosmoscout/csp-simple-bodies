@@ -50,7 +50,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 void Plugin::init() {
 
-  logger()->info("Loading plugin...");
+  logger().info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-simple-bodies");
 
@@ -80,13 +80,13 @@ void Plugin::init() {
         mSimpleBodyNodes.back().get(), static_cast<int>(cs::utils::DrawOrder::ePlanets));
   }
 
-  logger()->info("Loading done.");
+  logger().info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
-  logger()->info("Unloading plugin...");
+  logger().info("Unloading plugin...");
 
   for (auto const& simpleBody : mSimpleBodies) {
     mSolarSystem->unregisterBody(simpleBody);
@@ -97,7 +97,7 @@ void Plugin::deInit() {
     mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode.get());
   }
 
-  logger()->info("Unloading done.");
+  logger().info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
