@@ -36,7 +36,7 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   SimpleBody(SimpleBody&& other)      = default;
 
   SimpleBody& operator=(SimpleBody const& other) = delete;
-  SimpleBody& operator=(SimpleBody&& other) = delete;
+  SimpleBody& operator=(SimpleBody&& other) = default;
 
   ~SimpleBody() override;
 
