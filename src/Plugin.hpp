@@ -8,11 +8,13 @@
 #define CSP_SIMPLE_BODIES_PLUGIN_HPP
 
 #include "../../../src/cs-core/PluginBase.hpp"
-#include "SimpleBody.hpp"
 
-#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
+#include <map>
+#include <vector>
 
 namespace csp::simplebodies {
+
+class SimpleBody;
 
 /// This plugin provides the rendering of planets as spheres with a texture. Despite its name it
 /// can also render moons :P. It can be configured via the applications config file. See README.md
@@ -20,20 +22,24 @@ namespace csp::simplebodies {
 class Plugin : public cs::core::PluginBase {
  public:
   struct Settings {
-    struct Body {
+    struct SimpleBody {
       std::string mTexture;
     };
 
-    std::map<std::string, Body> mBodies;
+    std::map<std::string, SimpleBody> mSimpleBodies;
   };
 
   void init() override;
   void deInit() override;
 
  private:
-  Settings                                      mPluginSettings;
-  std::vector<std::shared_ptr<SimpleBody>>      mSimpleBodies;
-  std::vector<std::unique_ptr<VistaOpenGLNode>> mSimpleBodyNodes;
+  void onLoad();
+
+  Settings                                 mPluginSettings;
+  std::vector<std::shared_ptr<SimpleBody>> mSimpleBodies;
+
+  int mOnLoadConnection = -1;
+  int mOnSaveConnection = -1;
 };
 
 } // namespace csp::simplebodies

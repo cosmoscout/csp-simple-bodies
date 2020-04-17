@@ -12,6 +12,10 @@
 #include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
+#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
+#include <VistaKernel/GraphicsManager/VistaTransformNode.h>
+#include <VistaKernel/VistaSystem.h>
+#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 #include <VistaMath/VistaBoundingBox.h>
 #include <VistaOGLExt/VistaOGLUtils.h>
 
@@ -115,13 +119,11 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 SimpleBody::SimpleBody(std::shared_ptr<cs::core::Settings> settings,
-    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
-    std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
-    double tEndExistence)
+    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sCenterName,
+    std::string const& sFrameName, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialBody(sCenterName, sFrameName, tStartExistence, tEndExistence)
     , mSettings(std::move(settings))
     , mSolarSystem(std::move(solarSystem))
-    , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mRadii(cs::core::SolarSystem::getRadii(sCenterName)) {
   pVisibleRadius = mRadii[0];
 
@@ -170,6 +172,12 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::Settings> settings,
       [this](bool /*enabled*/) { mShaderDirty = true; });
   mEnableHDRConnection =
       mSettings->mGraphics.pEnableHDR.connect([this](bool /*enabled*/) { mShaderDirty = true; });
+
+  // Add to scenegraph.
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  mGLNode.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      mGLNode.get(), static_cast<int>(cs::utils::DrawOrder::ePlanets));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +185,18 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::Settings> settings,
 SimpleBody::~SimpleBody() {
   mSettings->mGraphics.pEnableLighting.disconnect(mEnableLightingConnection);
   mSettings->mGraphics.pEnableHDR.disconnect(mEnableHDRConnection);
+
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  pSG->GetRoot()->DisconnectChild(mGLNode.get());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void SimpleBody::configure(Plugin::Settings::SimpleBody const& settings) {
+  if (mSimpleBodySettings.mTexture != settings.mTexture) {
+    mTexture = cs::graphics::TextureLoader::loadFromFile(settings.mTexture);
+  }
+  mSimpleBodySettings = settings;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +254,7 @@ bool SimpleBody::Do() {
     return true;
   }
 
-  cs::utils::FrameTimings::ScopedTimer timer("Simple Planets");
+  cs::utils::FrameTimings::ScopedTimer timer("Simple Bodies");
 
   if (mShaderDirty) {
     mShader = VistaGLSLShader();

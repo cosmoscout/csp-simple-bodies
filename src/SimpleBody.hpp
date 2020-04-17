@@ -8,12 +8,14 @@
 #define CSP_SIMPLE_BODIES_SIMPLE_PLANET_HPP
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
+#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaOGLExt/VistaBufferObject.h>
 #include <VistaOGLExt/VistaGLSLShader.h>
 #include <VistaOGLExt/VistaTexture.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
 #include "../../../src/cs-scene/CelestialBody.hpp"
+#include "Plugin.hpp"
 
 namespace cs::core {
 class Settings;
@@ -27,17 +29,19 @@ namespace csp::simplebodies {
 class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
  public:
   SimpleBody(std::shared_ptr<cs::core::Settings> settings,
-      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
-      std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
-      double tEndExistence);
+      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sCenterName,
+      std::string const& sFrameName, double tStartExistence, double tEndExistence);
 
   SimpleBody(SimpleBody const& other) = delete;
-  SimpleBody(SimpleBody&& other)      = delete;
+  SimpleBody(SimpleBody&& other)      = default;
 
   SimpleBody& operator=(SimpleBody const& other) = delete;
   SimpleBody& operator=(SimpleBody&& other) = delete;
 
-  ~SimpleBody();
+  ~SimpleBody() override;
+
+  /// Configures the internal renderer according to the given values.
+  void configure(Plugin::Settings::SimpleBody const& settings);
 
   /// The sun object is used for lighting computation.
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
@@ -56,17 +60,18 @@ class SimpleBody : public cs::scene::CelestialBody, public IVistaOpenGLDraw {
   bool GetBoundingBox(VistaBoundingBox& bb) override;
 
  private:
-  std::shared_ptr<cs::core::Settings>    mSettings;
-  std::shared_ptr<cs::core::SolarSystem> mSolarSystem;
-
-  std::unique_ptr<VistaTexture> mTexture;
-
-  VistaGLSLShader        mShader;
-  VistaVertexArrayObject mSphereVAO;
-  VistaBufferObject      mSphereVBO;
-  VistaBufferObject      mSphereIBO;
-
+  std::shared_ptr<cs::core::Settings>               mSettings;
+  std::shared_ptr<cs::core::SolarSystem>            mSolarSystem;
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
+
+  std::unique_ptr<VistaOpenGLNode> mGLNode;
+
+  Plugin::Settings::SimpleBody  mSimpleBodySettings;
+  std::unique_ptr<VistaTexture> mTexture;
+  VistaGLSLShader               mShader;
+  VistaVertexArrayObject        mSphereVAO;
+  VistaBufferObject             mSphereVBO;
+  VistaBufferObject             mSphereIBO;
 
   glm::dvec3 mRadii;
 
