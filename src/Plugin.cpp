@@ -72,8 +72,8 @@ void Plugin::deInit() {
   logger().info("Unloading plugin...");
 
   for (auto const& simpleBody : mSimpleBodies) {
-    mSolarSystem->unregisterBody(simpleBody);
-    mInputManager->unregisterSelectable(simpleBody);
+    mSolarSystem->unregisterBody(simpleBody.second);
+    mInputManager->unregisterSelectable(simpleBody.second);
   }
 
   mAllSettings->onLoad().disconnect(mOnLoadConnection);
@@ -88,43 +88,40 @@ void Plugin::onLoad() {
   // Read settings from JSON.
   from_json(mAllSettings->mPlugins.at("csp-simple-bodies"), mPluginSettings);
 
-  // First try to re-configure existing simpleBodies.
-  for (auto&& simpleBody : mSimpleBodies) {
-    auto settings = mPluginSettings.mSimpleBodies.find(simpleBody->getCenterName());
+  // First try to re-configure existing simpleBodies. We assume that they are similar if they have
+  // the same name in the settings (which means they are attached to an anchor with the same name).
+  auto simpleBody = mSimpleBodies.begin();
+  while (simpleBody != mSimpleBodies.end()) {
+    auto settings = mPluginSettings.mSimpleBodies.find(simpleBody->first);
     if (settings != mPluginSettings.mSimpleBodies.end()) {
       // If there are settings for this simpleBody, reconfigure it.
       auto anchor                           = mAllSettings->mAnchors.find(settings->first);
       auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
-      simpleBody->setStartExistence(tStartExistence);
-      simpleBody->setEndExistence(tEndExistence);
-      simpleBody->setFrameName(anchor->second.mFrame);
-      simpleBody->configure(settings->second);
+      simpleBody->second->setStartExistence(tStartExistence);
+      simpleBody->second->setEndExistence(tEndExistence);
+      simpleBody->second->setFrameName(anchor->second.mFrame);
+      simpleBody->second->configure(settings->second);
+
+      ++simpleBody;
     } else {
       // Else delete it.
-      mSolarSystem->unregisterBody(simpleBody);
-      mInputManager->unregisterSelectable(simpleBody);
-      simpleBody.reset();
+      mSolarSystem->unregisterBody(simpleBody->second);
+      mInputManager->unregisterSelectable(simpleBody->second);
+      simpleBody = mSimpleBodies.erase(simpleBody);
     }
   }
 
-  // Then remove all which have been set to null.
-  mSimpleBodies.erase(
-      std::remove_if(mSimpleBodies.begin(), mSimpleBodies.end(), [](auto const& p) { return !p; }),
-      mSimpleBodies.end());
-
   // Then add new simpleBodies.
-  for (auto const& simpleBodySettings : mPluginSettings.mSimpleBodies) {
-    auto existing = std::find_if(mSimpleBodies.begin(), mSimpleBodies.end(),
-        [&](auto val) { return val->getCenterName() == simpleBodySettings.first; });
-    if (existing != mSimpleBodies.end()) {
+  for (auto const& settings : mPluginSettings.mSimpleBodies) {
+    if (mSimpleBodies.find(settings.first) != mSimpleBodies.end()) {
       continue;
     }
 
-    auto anchor = mAllSettings->mAnchors.find(simpleBodySettings.first);
+    auto anchor = mAllSettings->mAnchors.find(settings.first);
 
     if (anchor == mAllSettings->mAnchors.end()) {
       throw std::runtime_error(
-          "There is no Anchor \"" + simpleBodySettings.first + "\" defined in the settings.");
+          "There is no Anchor \"" + settings.first + "\" defined in the settings.");
     }
 
     auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
@@ -132,12 +129,12 @@ void Plugin::onLoad() {
     auto simpleBody = std::make_shared<SimpleBody>(mAllSettings, mSolarSystem,
         anchor->second.mCenter, anchor->second.mFrame, tStartExistence, tEndExistence);
 
-    simpleBody->configure(simpleBodySettings.second);
+    simpleBody->configure(settings.second);
 
     mSolarSystem->registerBody(simpleBody);
     mInputManager->registerSelectable(simpleBody);
 
-    mSimpleBodies.emplace_back(simpleBody);
+    mSimpleBodies.emplace(settings.first, simpleBody);
   }
 }
 

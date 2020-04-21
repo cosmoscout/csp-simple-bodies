@@ -35,8 +35,8 @@ class Plugin : public cs::core::PluginBase {
  private:
   void onLoad();
 
-  Settings                                 mPluginSettings;
-  std::vector<std::shared_ptr<SimpleBody>> mSimpleBodies;
+  Settings                                           mPluginSettings;
+  std::map<std::string, std::shared_ptr<SimpleBody>> mSimpleBodies;
 
   int mOnLoadConnection = -1;
   int mOnSaveConnection = -1;
