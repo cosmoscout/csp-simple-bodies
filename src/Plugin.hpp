@@ -10,7 +10,7 @@
 #include "../../../src/cs-core/PluginBase.hpp"
 
 #include <map>
-#include <vector>
+#include <string>
 
 namespace csp::simplebodies {
 
