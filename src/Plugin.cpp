@@ -130,6 +130,7 @@ void Plugin::onLoad() {
         anchor->second.mCenter, anchor->second.mFrame, tStartExistence, tEndExistence);
 
     simpleBody->configure(settings.second);
+    simpleBody->setSun(mSolarSystem->getSun());
 
     mSolarSystem->registerBody(simpleBody);
     mInputManager->registerSelectable(simpleBody);
