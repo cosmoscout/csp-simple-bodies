@@ -6,12 +6,16 @@
 
 #include "SimpleBody.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
 #include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
+#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
+#include <VistaKernel/GraphicsManager/VistaTransformNode.h>
+#include <VistaKernel/VistaSystem.h>
+#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 #include <VistaMath/VistaBoundingBox.h>
 #include <VistaOGLExt/VistaOGLUtils.h>
 
@@ -114,14 +118,12 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
-    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
-    std::string const& sCenterName, std::string const& sFrameName, double tStartExistence,
-    double tEndExistence)
+SimpleBody::SimpleBody(std::shared_ptr<cs::core::Settings> settings,
+    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sCenterName,
+    std::string const& sFrameName, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialBody(sCenterName, sFrameName, tStartExistence, tEndExistence)
-    , mGraphicsEngine(std::move(graphicsEngine))
+    , mSettings(std::move(settings))
     , mSolarSystem(std::move(solarSystem))
-    , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mRadii(cs::core::SolarSystem::getRadii(sCenterName)) {
   pVisibleRadius = mRadii[0];
 
@@ -166,17 +168,35 @@ SimpleBody::SimpleBody(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   mSphereVBO.Release();
 
   // Recreate the shader if lighting or HDR rendering mode are toggled.
-  mEnableLightingConnection =
-      mGraphicsEngine->pEnableLighting.connect([this](bool /*enabled*/) { mShaderDirty = true; });
+  mEnableLightingConnection = mSettings->mGraphics.pEnableLighting.connect(
+      [this](bool /*enabled*/) { mShaderDirty = true; });
   mEnableHDRConnection =
-      mGraphicsEngine->pEnableHDR.connect([this](bool /*enabled*/) { mShaderDirty = true; });
+      mSettings->mGraphics.pEnableHDR.connect([this](bool /*enabled*/) { mShaderDirty = true; });
+
+  // Add to scenegraph.
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  mGLNode.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      mGLNode.get(), static_cast<int>(cs::utils::DrawOrder::ePlanets));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 SimpleBody::~SimpleBody() {
-  mGraphicsEngine->pEnableLighting.disconnect(mEnableLightingConnection);
-  mGraphicsEngine->pEnableHDR.disconnect(mEnableHDRConnection);
+  mSettings->mGraphics.pEnableLighting.disconnect(mEnableLightingConnection);
+  mSettings->mGraphics.pEnableHDR.disconnect(mEnableHDRConnection);
+
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  pSG->GetRoot()->DisconnectChild(mGLNode.get());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void SimpleBody::configure(Plugin::Settings::SimpleBody const& settings) {
+  if (mSimpleBodySettings.mTexture != settings.mTexture) {
+    mTexture = cs::graphics::TextureLoader::loadFromFile(settings.mTexture);
+  }
+  mSimpleBodySettings = settings;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +254,7 @@ bool SimpleBody::Do() {
     return true;
   }
 
-  cs::utils::FrameTimings::ScopedTimer timer("Simple Planets");
+  cs::utils::FrameTimings::ScopedTimer timer("Simple Bodies");
 
   if (mShaderDirty) {
     mShader = VistaGLSLShader();
@@ -242,11 +262,11 @@ bool SimpleBody::Do() {
     // (Re-)create sphere shader.
     std::string defines = "#version 330\n";
 
-    if (mGraphicsEngine->pEnableHDR.get()) {
+    if (mSettings->mGraphics.pEnableHDR.get()) {
       defines += "#define ENABLE_HDR\n";
     }
 
-    if (mGraphicsEngine->pEnableLighting.get()) {
+    if (mSettings->mGraphics.pEnableLighting.get()) {
       defines += "#define ENABLE_LIGHTING\n";
     }
 
@@ -261,11 +281,11 @@ bool SimpleBody::Do() {
 
   glm::vec3 sunDirection(1, 0, 0);
   float     sunIlluminance(1.F);
-  float     ambientBrightness(mGraphicsEngine->pAmbientBrightness.get());
+  float     ambientBrightness(mSettings->mGraphics.pAmbientBrightness.get());
 
   if (getCenterName() == "Sun") {
     // If the SimpleBody is actually the sun, we have to calculate the lighting differently.
-    if (mGraphicsEngine->pEnableHDR.get()) {
+    if (mSettings->mGraphics.pEnableHDR.get()) {
       double sceneScale = 1.0 / mSolarSystem->getObserver().getAnchorScale();
       sunIlluminance    = static_cast<float>(
           mSolarSystem->pSunLuminousPower.get() /
@@ -276,7 +296,7 @@ bool SimpleBody::Do() {
 
   } else if (mSun) {
     // For all other bodies we can use the utility methods from the SolarSystem.
-    if (mGraphicsEngine->pEnableHDR.get()) {
+    if (mSettings->mGraphics.pEnableHDR.get()) {
       sunIlluminance = static_cast<float>(mSolarSystem->getSunIlluminance(getWorldTransform()[3]));
     }
 

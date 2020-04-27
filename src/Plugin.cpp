@@ -11,11 +11,8 @@
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-utils/logger.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "SimpleBody.hpp"
 #include "logger.hpp"
-
-#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
-#include <VistaKernel/GraphicsManager/VistaTransformNode.h>
-#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -35,15 +32,22 @@ namespace csp::simplebodies {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Body& o) {
-  o.mTexture = cs::core::parseProperty<std::string>("texture", j);
+void from_json(nlohmann::json const& j, Plugin::Settings::SimpleBody& o) {
+  cs::core::Settings::deserialize(j, "texture", o.mTexture);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings::SimpleBody const& o) {
+  cs::core::Settings::serialize(j, "texture", o.mTexture);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-simple-bodies",
-      [&] { o.mBodies = cs::core::parseMap<std::string, Plugin::Settings::Body>("bodies", j); });
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+  cs::core::Settings::deserialize(j, "bodies", o.mSimpleBodies);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings const& o) {
+  cs::core::Settings::serialize(j, "bodies", o.mSimpleBodies);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,33 +56,12 @@ void Plugin::init() {
 
   logger().info("Loading plugin...");
 
-  mPluginSettings = mAllSettings->mPlugins.at("csp-simple-bodies");
+  mOnLoadConnection = mAllSettings->onLoad().connect([this]() { onLoad(); });
+  mOnSaveConnection = mAllSettings->onSave().connect(
+      [this]() { mAllSettings->mPlugins["csp-simple-bodies"] = mPluginSettings; });
 
-  for (auto const& bodySettings : mPluginSettings.mBodies) {
-    auto anchor = mAllSettings->mAnchors.find(bodySettings.first);
-
-    if (anchor == mAllSettings->mAnchors.end()) {
-      throw std::runtime_error(
-          "There is no Anchor \"" + bodySettings.first + "\" defined in the settings.");
-    }
-
-    auto   existence       = cs::core::getExistenceFromSettings(*anchor);
-    double tStartExistence = existence.first;
-    double tEndExistence   = existence.second;
-
-    auto body =
-        std::make_shared<SimpleBody>(mGraphicsEngine, mSolarSystem, bodySettings.second.mTexture,
-            anchor->second.mCenter, anchor->second.mFrame, tStartExistence, tEndExistence);
-    mSolarSystem->registerBody(body);
-    mInputManager->registerSelectable(body);
-
-    body->setSun(mSolarSystem->getSun());
-    mSimpleBodyNodes.emplace_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), body.get()));
-    mSimpleBodies.emplace_back(body);
-
-    VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        mSimpleBodyNodes.back().get(), static_cast<int>(cs::utils::DrawOrder::ePlanets));
-  }
+  // Load settings.
+  onLoad();
 
   logger().info("Loading done.");
 }
@@ -89,15 +72,71 @@ void Plugin::deInit() {
   logger().info("Unloading plugin...");
 
   for (auto const& simpleBody : mSimpleBodies) {
-    mSolarSystem->unregisterBody(simpleBody);
-    mInputManager->unregisterSelectable(simpleBody);
+    mSolarSystem->unregisterBody(simpleBody.second);
+    mInputManager->unregisterSelectable(simpleBody.second);
   }
 
-  for (auto const& simpleBodyNode : mSimpleBodyNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(simpleBodyNode.get());
-  }
+  mAllSettings->onLoad().disconnect(mOnLoadConnection);
+  mAllSettings->onSave().disconnect(mOnSaveConnection);
 
   logger().info("Unloading done.");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Plugin::onLoad() {
+  // Read settings from JSON.
+  from_json(mAllSettings->mPlugins.at("csp-simple-bodies"), mPluginSettings);
+
+  // First try to re-configure existing simpleBodies. We assume that they are similar if they have
+  // the same name in the settings (which means they are attached to an anchor with the same name).
+  auto simpleBody = mSimpleBodies.begin();
+  while (simpleBody != mSimpleBodies.end()) {
+    auto settings = mPluginSettings.mSimpleBodies.find(simpleBody->first);
+    if (settings != mPluginSettings.mSimpleBodies.end()) {
+      // If there are settings for this simpleBody, reconfigure it.
+      auto anchor                           = mAllSettings->mAnchors.find(settings->first);
+      auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
+      simpleBody->second->setStartExistence(tStartExistence);
+      simpleBody->second->setEndExistence(tEndExistence);
+      simpleBody->second->setFrameName(anchor->second.mFrame);
+      simpleBody->second->configure(settings->second);
+
+      ++simpleBody;
+    } else {
+      // Else delete it.
+      mSolarSystem->unregisterBody(simpleBody->second);
+      mInputManager->unregisterSelectable(simpleBody->second);
+      simpleBody = mSimpleBodies.erase(simpleBody);
+    }
+  }
+
+  // Then add new simpleBodies.
+  for (auto const& settings : mPluginSettings.mSimpleBodies) {
+    if (mSimpleBodies.find(settings.first) != mSimpleBodies.end()) {
+      continue;
+    }
+
+    auto anchor = mAllSettings->mAnchors.find(settings.first);
+
+    if (anchor == mAllSettings->mAnchors.end()) {
+      throw std::runtime_error(
+          "There is no Anchor \"" + settings.first + "\" defined in the settings.");
+    }
+
+    auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
+
+    auto simpleBody = std::make_shared<SimpleBody>(mAllSettings, mSolarSystem,
+        anchor->second.mCenter, anchor->second.mFrame, tStartExistence, tEndExistence);
+
+    simpleBody->configure(settings.second);
+    simpleBody->setSun(mSolarSystem->getSun());
+
+    mSolarSystem->registerBody(simpleBody);
+    mInputManager->registerSelectable(simpleBody);
+
+    mSimpleBodies.emplace(settings.first, simpleBody);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
